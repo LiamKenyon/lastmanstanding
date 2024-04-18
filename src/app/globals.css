@@ -1,0 +1,272 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 255, 255, 255; /* Set to white */
+  --background-end-rgb: 255, 255, 255; /* Set to white */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 255, 255, 255; /* Set to white */
+    --background-end-rgb: 255, 255, 255; /* Set to white */
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+.login-form {
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  width: 400px;
+}
+
+.my-input {
+  border: 1px #dddfe2 solid;
+  border-radius: 5px;
+  padding: 5px 0 5px 10px;
+  background-color: white;
+  width: 100%;
+  height: 50px;
+  font-size: 0.9rem;
+}
+.my-input:focus {
+  outline: none;
+}
+
+.my-button {
+  width: 100%;
+  padding: 5px 0 5px 10px;
+  border-radius: 5px;
+  height: 50px;
+}
+
+.login-text {
+  margin-bottom: 5px;
+}
+
+.help-link {
+  margin-right: 5px; /* Adjust as needed */
+}
+
+.help-link-divider {
+  margin: 0 5px; /* Adjust as needed */
+}
+
+input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 50px white inset;
+}
+
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 50px white inset;
+}
+
+main {
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(to bottom, #f0f2f5 60%, #fff 60%);
+}
+.form-container {
+  background-color: white;
+  border-radius: 10px;
+}
+.google-button {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.google-icon {
+  left: 15px; /* Adjust as needed */
+  position: absolute;
+}
+
+.google-text {
+  text-align: center;
+  flex-grow: 1; /* Allow the text to take up remaining space */
+}
+
+.button-container {
+  width: 100%;
+}
+
+.my-button-2 {
+  width: 40%;
+  border-radius: 10px;
+  height: 50px;
+}
+
+.button-container {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+}
+
+nav {
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #363636;
+  font-size: 0.75rem;
+  padding: 20px;
+}
+.nav-left-container {
+  display: flex;
+  margin-left: 150px;
+  gap: 40px;
+  align-items: center;
+}
+.nav-right-container {
+  display: flex;
+  margin-right: 150px;
+  margin-top: 7px;
+  gap: 60px;
+}
+.more-container {
+  gap: 3px;
+}
+.sign-in-container {
+  gap: 10px;
+}
+.img-move-up {
+  position: relative;
+  top: -3px;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.red {
+  color: red;
+}
+
+nav > div > div:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+.login-header {
+  margin-top: 15vh;
+}
+.signup-header {
+  margin-top: 10vh;
+}
+
+.fixtures-header {
+  border-bottom: 3px solid #dddfe2;
+}
+
+.kick-off-time {
+  font-size: 0.8rem;
+  border: 1px solid #ebe5eb;
+  border-radius: 3px;
+  padding: 1px 3px;
+}
+
+.home-team {
+  width: 140px;
+  text-align: right;
+}
+.away-team {
+  width: 140px;
+  text-align: left;
+}
+
+.stadium {
+  width: 250px;
+  text-align: left;
+  margin-left: 150px;
+}
+
+.quick-view-btn {
+  margin-left: 100px;
+  font-size: 0.8rem;
+  border: 1px solid #ebe5eb;
+  border-radius: 3px;
+  padding: 3px 6px;
+}
+
+.single-game-container {
+  border-bottom: 1px solid #dddfe2;
+}
+
+.team-img {
+  width: 2rem;
+  height: 2rem;
+}
+
+.dates {
+  margin-top: 30px;
+}
+
+.select-team {
+  padding: 5px 10px;
+  border-radius: 10px;
+}
+
+.select-team:hover {
+  background: darkgrey;
+  opacity: 0.6;
+}
+
+.team-name {
+  width: 180px;
+  text-align: left;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+.team-name-header {
+  width: 180px;
+  text-align: left;
+}
+
+.won,
+.drawn,
+.lost,
+.played,
+.points,
+.won-header,
+.drawn-header,
+.lost-header,
+.played-header,
+.points-header {
+  width: 60px;
+  text-align: center;
+  font-size: 0.8rem;
+}
+.points {
+  font-weight: bold;
+}
+.position,
+.position-header {
+  width: 70px;
+  text-align: center;
+}
+
+.table-headers {
+  font-size: 0.7rem;
+  margin-top: 20px;
+}
+
+.table-team {
+  padding: 10px 0;
+  border-bottom: 1px solid #dddfe2;
+}
+
+.table-and-games-container {
+  margin-top: 30px;
+}
