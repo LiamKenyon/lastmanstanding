@@ -45,7 +45,7 @@ export async function POST(req) {
     }
 
     // Insert the session ID into the database
-    await db.collection("lastmanstanding-sessions").insertOne({ sessionId, userId: user._id });
+    await db.collection("lastmanstanding-sessions").insertOne({ sessionId, userId: user._id, createdAt: new Date() });
     cookies().set("sessionId", sessionId, { httpOnly: true });
     console.log(sessionId);
     return Response.json({ message: "Login successful" }, { status: 200 });
