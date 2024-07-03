@@ -270,3 +270,33 @@ nav > div > div:hover {
 .table-and-games-container {
   margin-top: 30px;
 }
+
+.view-leagues-container {
+  background: linear-gradient(139deg, rgb(230, 0, 126), rgb(29, 113, 184));
+  width: 250px;
+  height: 250px;
+  border-radius: 20px;
+  margin: 150px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.view-leagues-heading {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+.view-leagues-btn {
+  margin-top: 50px;
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  border: 1px solid white;
+  padding: 5px 20px;
+  border-radius: 5px;
+}

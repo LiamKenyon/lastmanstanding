@@ -4,11 +4,11 @@ import { useState } from "react";
 import Navbar from "../../../components/Navbar";
 
 export default function Login() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleUsernameChange = (e) => {
-    setUsername(e.target.value);
+  const handleEmailChange = (e) => {
+    setEmail(e.target.value);
   };
 
   const handlePasswordChange = (e) => {
@@ -23,7 +23,7 @@ export default function Login() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ email, password }),
     });
 
     const data = await response.json();
@@ -41,12 +41,12 @@ export default function Login() {
         <form method="post" action="/api/" className="login-form flex flex-col items-center justify-center gap-3">
           <div className="login-text">Log in to LMS</div>
           <input
-            name="username"
-            type="text"
-            placeholder="Email address or username"
+            name="email"
+            type="email"
+            placeholder="Email address"
             className="my-input"
-            value={username}
-            onChange={handleUsernameChange}
+            value={email}
+            onChange={handleEmailChange}
           />
           <input
             type="password"

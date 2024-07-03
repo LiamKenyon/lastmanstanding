@@ -105,3 +105,5 @@ export default function Fixtures() {
     </main>
   );
 }
+// Now users can create leagues, need to be able to join leagues.
+// To be able to pick teams, need a script to get all fixtures, for the upcoming round. (already made somewhere)

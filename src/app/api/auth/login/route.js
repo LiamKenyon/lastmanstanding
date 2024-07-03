@@ -1,6 +1,6 @@
-import { connectToDatabase } from "../../../../../lib/mongodb";
 import { cookies } from "next/headers";
 const bcrypt = require("bcrypt");
+import db from "../../../../../lib/db";
 
 // Generate a random alphanumeric session ID
 function generateSessionId() {
@@ -14,45 +14,58 @@ function generateSessionId() {
 }
 
 export async function POST(req) {
-  // Initialize variables before the try block
-  let { client } = await connectToDatabase();
-  let db;
-  const formData = await req.json();
   try {
-    // Initialize the db object within the try block
-    db = client.db("lastmanstanding-scores");
+    let formData = await req.json();
+    const { email, password } = formData;
+    console.log(email, password);
 
-    // Get the users collection
-    const user = await db.collection("lastmanstanding-users").findOne({ email: formData.username });
+    if (!email || !password) {
+      return Response.json({ error: "Email and password are required" }, { status: 400 });
+    }
 
-    // Check if the user exists
+    // Search the DB users for the credentials
+    const user = await new Promise((resolve, reject) => {
+      db.get("SELECT * FROM users WHERE email = ?", [email], (err, row) => {
+        if (err) {
+          console.error("Database error:", err.message);
+          reject(new Error("Database error"));
+        } else {
+          resolve(row);
+        }
+      });
+    });
+
     if (!user) {
-      return Response.json({ message: "Invalid username or password" }, { status: 401 });
+      return Response.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
-    // Check if the password is correct
-    const passwordMatch = await bcrypt.compare(formData.password, user.password);
+    // Compare the provided password with the hashed password in the database
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
     if (!passwordMatch) {
-      //console.log(await bcrypt.hash("password", 10));
-      return Response.json({ message: "Invalid username or password" }, { status: 401 });
+      return Response.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
-    //  Generate a unique session ID
-    let sessionId = generateSessionId();
-    let sessiodIdExists = await db.collection("lastmanstanding-sessions").findOne({ sessionId });
-    while (sessiodIdExists) {
-      sessionId = generateSessionId();
-    }
+    // Generate a session ID and set it in cookies
+    const sessionId = generateSessionId();
 
-    // Insert the session ID into the database
-    await db.collection("lastmanstanding-sessions").insertOne({ sessionId, userId: user._id, createdAt: new Date() });
-    cookies().set("sessionId", sessionId, { httpOnly: true });
-    console.log(sessionId);
+    // Insert the session into the sessions table
+    await new Promise((resolve, reject) => {
+      db.run("INSERT INTO sessions (sessionid, userid) VALUES (?, ?)", [sessionId, user.id], (err) => {
+        if (err) {
+          console.error("Error inserting session:", err.message);
+          reject(new Error("Error inserting session"));
+        } else {
+          resolve();
+        }
+      });
+    });
+
+    cookies().set("sessionId", sessionId, { httpOnly: true, secure: process.env.NODE_ENV === "production" });
+
     return Response.json({ message: "Login successful" }, { status: 200 });
   } catch (error) {
-    console.log(error);
-  } finally {
-    // Close the client connection in the finally block
-    client.close();
+    console.error("Error handling POST request:", error);
+    return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }

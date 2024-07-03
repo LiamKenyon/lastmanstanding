@@ -1,3 +1,4 @@
+import db from "../../../../lib/db";
 import { connectToDatabase } from "../../../../lib/mongodb";
 
 // Helper function to parse cookies
@@ -26,35 +27,52 @@ function generateLeagueId() {
 }
 
 export async function POST(req) {
-  let { client } = await connectToDatabase();
-  let db;
   const formData = await req.json();
+  const cookies = parseCookies(req);
 
   try {
-    // Initialize the db object within the try block
-    const cookies = parseCookies(req);
-    console.log(cookies);
-    db = client.db("lastmanstanding-scores");
-    // Create a new league
+    // Check if required fields are provided
+    if (!formData.entryAmount || !formData.maxRounds) {
+      return new Response(JSON.stringify({ error: "Entry amount and max rounds are required" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // Generate a unique league code
     let leagueId = generateLeagueId();
-    let leagueIdExists = await db.collection("leagues").findOne({ leagueId });
+    let leagueIdExists = await new Promise((resolve, reject) => {
+      db.get("SELECT * FROM leagues WHERE code = ?", [leagueId], (err, row) => {
+        if (err) reject(err);
+        resolve(row);
+      });
+    });
+
     while (leagueIdExists) {
       leagueId = generateLeagueId();
-      leagueIdExists = await db.collection("leagues").findOne({ leagueId });
+      leagueIdExists = await new Promise((resolve, reject) => {
+        db.get("SELECT * FROM leagues WHERE code = ?", [leagueId], (err, row) => {
+          if (err) reject(err);
+          resolve(row);
+        });
+      });
     }
 
-    // Get the user ID from the session ID
+    // Get the user ID from the session ID (example implementation, adjust as per your session handling)
     let userId;
-    const session = await db.collection("lastmanstanding-sessions").findOne({ sessionId: cookies.sessionId });
+    const session = await new Promise((resolve, reject) => {
+      db.get("SELECT * FROM sessions WHERE sessionid = ?", [cookies.sessionId], (err, row) => {
+        if (err) reject(err);
+        resolve(row);
+      });
+    });
     if (!session) {
-      return Response.json({ message: "Unauthorized" }, { status: 401 });
+      return new Response(JSON.stringify({ message: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
     } else {
-      userId = session.userId;
-    }
-
-    // Check max rounds is empty
-    if (formData.maxRounds === "" || formData.maxRounds === 0) {
-      formData.maxRounds = "unlimited";
+      userId = session.userid;
     }
 
     // Check if the league has a name
@@ -62,22 +80,62 @@ export async function POST(req) {
       formData.leagueName = leagueId;
     }
 
-    // Create a new league
-    await db.collection("lastmanstanding-leagues").insertOne({
-      leagueId,
-      leagueName: formData.leagueName,
-      entryAmount: formData.entryAmount,
-      maxRounds: formData.maxRounds,
-      createdAt: new Date(),
-      userIds: [userId],
-    });
-    return Response.json({ message: "League created successfully" }, { status: 200 });
+    // Start transaction to ensure atomicity
+    await new Promise((resolve, reject) => {
+      db.serialize(() => {
+        db.run("BEGIN TRANSACTION");
 
-    //const user = await db.collection("lastmanstanding-leagues").findOne({}); -- example of how to find a document in a collection
+        // Insert into leagues table
+        db.run(
+          `INSERT INTO leagues (code, name, entry_amount, max_rounds, created_at, user_id) 
+          VALUES (?, ?, ?, ?, ?, ?)`,
+          [leagueId, formData.leagueName, formData.entryAmount, formData.maxRounds, new Date().toISOString(), userId],
+          function (err) {
+            if (err) {
+              db.run("ROLLBACK");
+              console.error("Error inserting league:", err.message);
+              reject(err);
+            }
+            const leagueId = this.lastID;
+
+            // Insert into league_users table
+            db.run(
+              `INSERT INTO league_users (league_id, user_id) 
+              VALUES (?, ?)`,
+              [leagueId, userId],
+              function (err) {
+                if (err) {
+                  db.run("ROLLBACK");
+                  console.error("Error inserting league_user:", err.message);
+                  reject(err);
+                }
+                console.log(`League ${leagueId} created and user ${userId} added successfully.`);
+                db.run("COMMIT");
+                resolve(this.lastID);
+              }
+            );
+          }
+        );
+      });
+    });
+
+    return new Response(JSON.stringify({ message: "League created successfully" }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (error) {
-    console.log(error);
+    console.error("Error creating league:", error);
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   } finally {
-    // Close the client connection in the finally block
-    client.close();
+    // Close SQLite database connection in the finally block
+    db.close((err) => {
+      if (err) {
+        console.error("Error closing SQLite database:", err.message);
+      }
+      console.log("Closed SQLite database connection.");
+    });
   }
 }
