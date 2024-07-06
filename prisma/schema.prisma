@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:../db.sqlite"
+}
+
+model league_users {
+  id        Int      @id @default(autoincrement())
+  league_id Int?
+  user_id   Int?
+  users     users?   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  leagues   leagues? @relation(fields: [league_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([league_id, user_id], map: "sqlite_autoindex_league_users_1")
+}
+
+model leagues {
+  id           Int            @id @default(autoincrement())
+  name         String
+  code         String         @unique(map: "sqlite_autoindex_leagues_1")
+  entry_amount Int
+  max_rounds   Int
+  created_at   DateTime?      @default(now())
+  user_id      Int
+  league_users league_users[]
+  users        users          @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model sessions {
+  id         Int    @id @default(autoincrement())
+  session_id String
+  user_id    Int
+  users      users  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model users {
+  id           Int            @id @default(autoincrement())
+  email        String         @unique(map: "sqlite_autoindex_users_1")
+  password     String
+  league_users league_users[]
+  leagues      leagues[]
+  sessions     sessions[]     @ignore
+}

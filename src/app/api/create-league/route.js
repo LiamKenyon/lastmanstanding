@@ -61,7 +61,7 @@ export async function POST(req) {
     // Get the user ID from the session ID (example implementation, adjust as per your session handling)
     let userId;
     const session = await new Promise((resolve, reject) => {
-      db.get("SELECT * FROM sessions WHERE sessionid = ?", [cookies.sessionId], (err, row) => {
+      db.get("SELECT * FROM sessions WHERE session_id = ?", [cookies.sessionId], (err, row) => {
         if (err) reject(err);
         resolve(row);
       });
@@ -72,7 +72,7 @@ export async function POST(req) {
         headers: { "Content-Type": "application/json" },
       });
     } else {
-      userId = session.userid;
+      userId = session.user_id;
     }
 
     // Check if the league has a name

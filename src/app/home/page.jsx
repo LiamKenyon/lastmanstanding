@@ -1,19 +1,51 @@
+"use client";
+
+import { useState } from "react";
 import Navbar from "../../../components/Navbar";
-import { signIn } from "next-auth/react";
+
+const getUserLeagues = async () => {
+  const response = await fetch("http://localhost:3000/api/get-all-leagues", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch leagues");
+  }
+
+  return response.json();
+};
 
 export default function Login() {
+  const [leagues, setLeagues] = useState([]);
+  const [error, setError] = useState(null);
+
+  const handleGetUserLeagues = async () => {
+    try {
+      const data = await getUserLeagues();
+      setLeagues(data);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   return (
     <main>
       <Navbar />
       <div className="view-leagues-container">
         <div className="h3 view-leagues-heading">View your leagues here</div>
-        <button className="view-leagues-btn">View</button>
+        <button onClick={handleGetUserLeagues} className="view-leagues-btn">
+          View
+        </button>
+        {error && <div className="error">{error}</div>}
+        <ul>
+          {leagues.map((league) => (
+            <li key={league.id}>{league.name}</li>
+          ))}
+        </ul>
       </div>
     </main>
-    // Going to want to have an api to call that fetches all teh leagues that the user is in
-    // Call that API when the button is clicked or when the page is loaded, and display the leagues in a list
-    // For now just the simple info of the league
-
-    // In the future we will display the teams the user has already picked and a history of the rounds
   );
 }

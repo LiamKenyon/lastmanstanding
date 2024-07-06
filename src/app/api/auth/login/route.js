@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
-const bcrypt = require("bcrypt");
-import db from "../../../../../lib/db";
+import bcrypt from "bcrypt";
+import prisma from "../../../../../lib/prisma"; // Import the Prisma client
 
 // Generate a random alphanumeric session ID
 function generateSessionId() {
@@ -14,6 +14,8 @@ function generateSessionId() {
 }
 
 export async function POST(req) {
+  console.log(prisma.sessions);
+  console.log("GGGGGGGGGGGGGGGGGGGGGGGG");
   try {
     let formData = await req.json();
     const { email, password } = formData;
@@ -24,15 +26,10 @@ export async function POST(req) {
     }
 
     // Search the DB users for the credentials
-    const user = await new Promise((resolve, reject) => {
-      db.get("SELECT * FROM users WHERE email = ?", [email], (err, row) => {
-        if (err) {
-          console.error("Database error:", err.message);
-          reject(new Error("Database error"));
-        } else {
-          resolve(row);
-        }
-      });
+    const user = await prisma.users.findFirst({
+      where: {
+        email: email,
+      },
     });
 
     if (!user) {
@@ -50,15 +47,11 @@ export async function POST(req) {
     const sessionId = generateSessionId();
 
     // Insert the session into the sessions table
-    await new Promise((resolve, reject) => {
-      db.run("INSERT INTO sessions (sessionid, userid) VALUES (?, ?)", [sessionId, user.id], (err) => {
-        if (err) {
-          console.error("Error inserting session:", err.message);
-          reject(new Error("Error inserting session"));
-        } else {
-          resolve();
-        }
-      });
+    await prisma.sessions.create({
+      data: {
+        session_id: sessionId,
+        user_id: user.id,
+      },
     });
 
     cookies().set("sessionId", sessionId, { httpOnly: true, secure: process.env.NODE_ENV === "production" });
