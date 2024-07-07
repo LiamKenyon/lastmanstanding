@@ -1,4 +1,6 @@
 import db from "../../../../../lib/db";
+import prisma from "../../../../../lib/prisma"; // Import the Prisma client
+
 const bcrypt = require("bcrypt");
 
 export async function POST(req) {
@@ -11,17 +13,14 @@ export async function POST(req) {
     }
 
     // Check if the user already exists
-    const existingUser = await new Promise((resolve, reject) => {
-      db.get("SELECT * FROM users WHERE email = ?", [email], (err, row) => {
-        if (err) {
-          console.error("Database error:", err.message);
-          reject(new Error("Database error"));
-        } else {
-          resolve(row);
-        }
-      });
-    });
 
+    const existingUser = await prisma.users.findFirst({
+      where: {
+        email: email,
+      },
+    });
+    console.log(existingUser);
+    console.log("GGGGGGGGGGGGG");
     if (existingUser) {
       return Response.json({ error: "User already exists" }, { status: 409 });
     }
@@ -30,15 +29,11 @@ export async function POST(req) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Insert the new user into the database
-    await new Promise((resolve, reject) => {
-      db.run("INSERT INTO users (email, password) VALUES (?, ?)", [email, hashedPassword], (err) => {
-        if (err) {
-          console.error("Error inserting user:", err.message);
-          reject(new Error("Error inserting user"));
-        } else {
-          resolve();
-        }
-      });
+    await prisma.users.create({
+      data: {
+        email: email,
+        password: hashedPassword,
+      },
     });
 
     return Response.json({ message: "User created successfully" }, { status: 200 });

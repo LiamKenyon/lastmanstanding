@@ -14,8 +14,7 @@ function generateSessionId() {
 }
 
 export async function POST(req) {
-  console.log(prisma.sessions);
-  console.log("GGGGGGGGGGGGGGGGGGGGGGGG");
+  //console.log(prisma.sessions);
   try {
     let formData = await req.json();
     const { email, password } = formData;
