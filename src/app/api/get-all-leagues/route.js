@@ -1,4 +1,5 @@
 import db from "../../../../lib/db";
+import prisma from "../../../../lib/prisma";
 
 // Helper function to parse cookies
 function parseCookies(req) {
@@ -22,13 +23,13 @@ export async function GET(req, res) {
 
   try {
     // Get the userId from the session table using sessionId
-    const session = await new Promise((resolve, reject) => {
-      db.get("SELECT user_id FROM sessions WHERE session_id = ?", [cookies.sessionId], (err, row) => {
-        if (err) reject(err);
-        resolve(row);
-      });
+    const session = await prisma.sessions.findFirst({
+      where: {
+        session_id: cookies.sessionId,
+      },
     });
-    console.log(session);
+
+    console.log("session: ", session);
 
     if (!session) {
       return new Response(JSON.stringify({ error: "Invalid session" }), { status: 401 });
@@ -38,25 +39,33 @@ export async function GET(req, res) {
     console.log(userId);
 
     // Get the league IDs for the user
-    const leagueIds = await new Promise((resolve, reject) => {
-      db.all("SELECT id FROM leagues WHERE user_id = ?", [userId], (err, rows) => {
-        if (err) reject(err);
-        resolve(rows.map((row) => row.id));
-      });
+    // Use prisma instead
+    const leagueIds = await prisma.league_users.findMany({
+      where: {
+        user_id: userId,
+      },
+      select: {
+        league_id: true,
+      },
     });
-    console.log(leagueIds);
+
+    console.log("leaguedids: ", leagueIds);
 
     if (leagueIds.length === 0) {
       return new Response(JSON.stringify([]), { status: 200, headers: { "Content-Type": "application/json" } });
     }
 
-    // Get the league names using the league IDs
-    const leagues = await new Promise((resolve, reject) => {
-      const placeholders = leagueIds.map(() => "?").join(",");
-      db.all(`SELECT id, name FROM leagues WHERE id IN (${placeholders})`, leagueIds, (err, rows) => {
-        if (err) reject(err);
-        resolve(rows);
-      });
+    // Get the league names using the league IDs with prisma
+    const leagues = await prisma.leagues.findMany({
+      where: {
+        id: {
+          in: leagueIds.map((league) => league.league_id),
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+      },
     });
     console.log(leagues);
 
