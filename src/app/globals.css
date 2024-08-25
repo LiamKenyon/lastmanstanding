@@ -68,12 +68,13 @@ input:-webkit-autofill {
 input:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0 50px white inset;
 }
-
+/*
 main {
   width: 100vw;
   height: 100vh;
   background: linear-gradient(to bottom, #f0f2f5 60%, #fff 60%);
 }
+  */
 .form-container {
   background-color: white;
   border-radius: 10px;
@@ -125,8 +126,9 @@ nav {
 .nav-left-container {
   display: flex;
   margin-left: 150px;
-  gap: 40px;
+  justify-content: space-evenly;
   align-items: center;
+  gap: 60px;
 }
 .nav-right-container {
   display: flex;
@@ -164,10 +166,6 @@ nav > div > div:hover {
 }
 .signup-header {
   margin-top: 10vh;
-}
-
-.fixtures-header {
-  border-bottom: 3px solid #dddfe2;
 }
 
 .kick-off-time {
@@ -271,32 +269,121 @@ nav > div > div:hover {
   margin-top: 30px;
 }
 
-.view-leagues-container {
-  background: linear-gradient(139deg, rgb(230, 0, 126), rgb(29, 113, 184));
-  width: 250px;
-  height: 250px;
-  border-radius: 20px;
-  margin: 150px;
-  padding: 15px;
+.home-container {
   display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
+  flex-direction: row;
+  justify-content: center;
+  gap: 20rem;
+  margin-top: 100px;
 }
 
-.view-leagues-heading {
+.home-left-container > h1 {
+  font-size: 2.5rem;
+  color: #4096c7;
+}
+
+.home-left-container table {
+  margin-top: 20px;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  border-radius: 15px;
+}
+
+.home-left-container table th,
+.home-left-container table td {
+  padding: 10px 30px; /* 10px vertical padding, 20px horizontal padding */
+}
+
+.home-left-container table th {
+  border-bottom: 1px solid #dddfe2;
+}
+
+.home-left-container table th:first-child {
+  border-top-left-radius: 15px;
+}
+
+.active-leagues-container th {
+  color: #8694a0;
+  font-weight: normal;
+  text-align: left;
+}
+
+.home-left-container table td img {
+  display: block;
+  margin: 0 auto;
+}
+
+.home-button-container {
+  display: flex;
+  flex-direction: row;
+  margin-top: 28px;
+  gap: 20px;
+}
+
+.join-league {
+  background-color: #da0681;
   color: white;
+  border-radius: 10px;
+  padding: 10px 30px;
+  font-weight: 600;
+  width: 180px;
+}
+
+.create-league {
+  width: 180px;
+  color: #4096c7;
+  border-radius: 10px;
+  padding: 10px 30px;
+  font-weight: 600;
+  border: 3px solid #4096c7;
+}
+
+.home-right-container > h1 {
+  font-size: 1.75rem;
+  color: #da0681;
+  margin-top: 70px;
+}
+
+#your-teams {
+  margin-top: 10px;
+}
+
+.home-right-container > p {
+  color: #8694a0;
+}
+
+.home-right-container table {
+  margin-left: 100px;
+}
+
+.home-right-container td {
+  margin-top: 10px;
+  padding: 10px 10px;
+}
+
+.rules-heading {
   font-size: 1.5rem;
-  font-weight: bold;
+  color: #da0681;
+  margin-top: 40px;
+}
+
+#rules-link {
+  color: #000000;
+}
+
+.join-league-card {
+  width: 20vw;
   text-align: center;
 }
 
-.view-leagues-btn {
-  margin-top: 50px;
-  color: white;
-  font-weight: bold;
-  font-size: 1rem;
-  border: 1px solid white;
-  padding: 5px 20px;
-  border-radius: 5px;
+.join-league-input {
+  width: 80%;
+  margin: 10px auto;
+}
+
+.join-league-card {
+  position: fixed;
+  top: 100px;
+  left: 40vw;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  border-radius: 20px;
 }

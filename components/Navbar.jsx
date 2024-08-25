@@ -1,4 +1,8 @@
+// add use session
+import { signOut, useSession } from "next-auth/react";
+
 const Navbar = () => {
+  const { data: session, status } = useSession();
   return (
     <nav className="nav">
       <div className="nav-left-container">
@@ -7,24 +11,24 @@ const Navbar = () => {
           <span>M</span>
           <span className="red">S</span>
         </div>
-        <div className="leagues-link">Leagues</div>
-        <div className="fixtures">Fixtures</div>
-        <div className="live">Live</div>
       </div>
       <div className="nav-right-container">
-        <div className="more-container flex">
-          <img
-            className="img-move-up"
-            src="/svgs/nav-arrow-down.svg"
-            alt="More"
-          />
-          <div className="more">More</div>
-        </div>
-        <div className="deposit">Deposit</div>
-        <div className="sign-in-container flex">
-          <div className="sign-in-nav">Sign in</div>
-          <img className="img-move-up" src="/svgs/user-plus.svg" alt="" />
-        </div>
+        <div className="deposit">leagues</div>
+        <div className="more">fixtures</div>
+        <div className="deposit">tables</div>
+        <div className="deposit">about</div>
+        {/* Only render the sign-in elements if there is no session */}
+        {!session && (
+          <div className="sign-in-container flex">
+            <div className="sign-in-nav">Sign </div>
+            <img className="img-move-up" src="/svgs/user-plus.svg" alt="Sign in" />
+          </div>
+        )}
+        {session && (
+          <div onClick={() => signOut("google")} className="deposit">
+            sign out
+          </div>
+        )}
       </div>
     </nav>
   );

@@ -1,81 +1,39 @@
 import prisma from "../../../../lib/prisma";
-
-// Helper function to parse cookies
-function parseCookies(req) {
-  const list = {};
-  const cookieHeader = req.headers.get("cookie");
-  if (!cookieHeader) return list;
-
-  cookieHeader.split(";").forEach((cookie) => {
-    const [name, ...rest] = cookie.split("=");
-    list[name.trim()] = decodeURI(rest.join("="));
-  });
-
-  return list;
-}
+import { getUniqueLeagueId } from "../../../../lib/utils";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]/route";
 
 export async function POST(req) {
+  const session = await getServerSession(authOptions);
   const formData = await req.json();
-  const cookies = parseCookies(req);
-
-  // Check if league code is provided
-  if (!formData.leagueCode) {
-    return new Response(JSON.stringify({ error: "League code is required" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
+  if (!session) {
+    return new Response(JSON.stringify({ message: "Unauthorized" }), {
+      status: 401,
     });
   }
-
-  // Check if session exists in cookies, and if it search for session in db
-  if (!cookies.sessionId) {
-    return new Response(JSON.stringify({ error: "Session not found" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
-  } else {
-    const session = await prisma.sessions.findFirst({
+  // Find the league with the given code
+  try {
+    const league = await prisma.leagues.findFirst({
       where: {
-        session_id: cookies.sessionId,
+        code: formData.code,
       },
     });
-    if (session) {
-      console.log("Session found");
-      // Check if user exists in db
-      const user = await prisma.users.findFirst({
-        where: {
-          id: session.user_id,
+    if (league != null) {
+      // Add the user to the league
+      await prisma.league_users.create({
+        data: {
+          user_id: session.user.sub,
+          league_id: league.id,
         },
       });
-      // If user exists, check if league exists, and if it does, add user to league
-      if (user) {
-        const league = await prisma.leagues.findFirst({
-          where: {
-            code: formData.leagueCode,
-          },
-        });
-        if (league) {
-          // Add to league_users table user_id and league_id
-          console.log("League found");
-          await prisma.league_users.create({
-            data: {
-              user_id: user.id,
-              league_id: league.id,
-            },
-          });
-        } else {
-          console.log("League not found");
-        }
-      } else {
-        return new Response(JSON.stringify({ error: "User not found" }), {
-          status: 404,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
     }
+    return new Response(JSON.stringify({ message: "League found" }), {
+      status: 200,
+    });
+  } catch (error) {
+    console.error(error);
+    return new Response(JSON.stringify({ error: "Failed to join league" }), {
+      status: 500,
+    });
   }
-
-  return new Response(JSON.stringify({ message: "League joined successfully" }), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
 }

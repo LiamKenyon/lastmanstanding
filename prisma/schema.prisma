@@ -10,23 +10,27 @@ datasource db {
 model league_users {
   id        Int      @id @default(autoincrement())
   league_id Int?
-  user_id   Int?
-  users     users?   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user_id   String
   leagues   leagues? @relation(fields: [league_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
+  users     users?   @relation(fields: [usersId], references: [id])
+  usersId   Int?
+  isEliminated Boolean  @default(false)
+  
   @@unique([league_id, user_id], map: "sqlite_autoindex_league_users_1")
 }
 
 model leagues {
-  id           Int            @id @default(autoincrement())
+  id           Int       @id @default(autoincrement())
   name         String
-  code         String         @unique(map: "sqlite_autoindex_leagues_1")
-  entry_amount Int
-  max_rounds   Int
-  created_at   DateTime?      @default(now())
-  user_id      Int
+  code         String    @unique(map: "sqlite_autoindex_leagues_1")
+  created_at   DateTime? @default(now())
+  user_id      String
+  gameWeekNo   Int       @default(1)
+  gameWeekDate DateTime  @default(now())
+
   league_users league_users[]
-  users        users          @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users        users?         @relation(fields: [usersId], references: [id])
+  usersId      Int?
 }
 
 model sessions {
@@ -43,4 +47,20 @@ model users {
   league_users league_users[]
   leagues      leagues[]
   sessions     sessions[]     @ignore
+}
+
+model games {
+  id            Int      @id @default(autoincrement())
+  date          DateTime
+  homeTeam      String
+  homeScore     Int
+  homeOutcome   String
+  awayTeam      String
+  awayScore     Int
+  awayOutcome   String
+  eventProgress String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([date, homeTeam, awayTeam])
 }

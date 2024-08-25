@@ -1,10 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useSession } from "next-auth/react";
+import { useState, useEffect } from "react";
 import Navbar from "../../../components/Navbar";
+import Link from "next/link";
+import JoinLeague from "../../../components/JoinLeague";
+import CreateLeague from "../../../components/CreateLeague";
 
 const getUserLeagues = async () => {
-  const response = await fetch("http://localhost:3000/api/get-all-leagues", {
+  const response = await fetch("/api/get-all-leagues", {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -18,34 +22,131 @@ const getUserLeagues = async () => {
   return response.json();
 };
 
-export default function Login() {
+export default function Home() {
   const [leagues, setLeagues] = useState([]);
   const [error, setError] = useState(null);
+  const [showJoinLeague, setShowJoinLeague] = useState(false);
+  const [showCreateLeague, setShowCreateLeague] = useState(false);
 
-  const handleGetUserLeagues = async () => {
-    try {
-      const data = await getUserLeagues();
-      setLeagues(data);
-    } catch (err) {
-      setError(err.message);
-    }
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    // Fetch leagues data when the component mounts
+    const fetchLeagues = async () => {
+      try {
+        const data = await getUserLeagues();
+        setLeagues(data);
+      } catch (err) {
+        setError(err.message);
+      }
+    };
+
+    fetchLeagues();
+  }, []);
+
+  const handleJoinLeagueClick = () => {
+    setShowJoinLeague(!showJoinLeague);
+    setShowCreateLeague(false); // Hide Create League when Join League is shown
+  };
+
+  const handleCreateLeagueClick = () => {
+    setShowCreateLeague(!showCreateLeague);
+    setShowJoinLeague(false); // Hide Join League when Create League is shown
   };
 
   return (
-    <main>
+    <main className="home-page">
       <Navbar />
-      <div className="view-leagues-container">
-        <div className="h3 view-leagues-heading">View your leagues here</div>
-        <button onClick={handleGetUserLeagues} className="view-leagues-btn">
-          View
-        </button>
-        {error && <div className="error">{error}</div>}
-        <ul>
-          {leagues.map((league) => (
-            <li key={league.id}>{league.name}</li>
-          ))}
-        </ul>
+      <div className="home-container">
+        <div className="home-left-container">
+          <h1>
+            View Your <br />
+            Active Leagues
+          </h1>
+          <div className="active-leagues-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Status</th>
+                  {/* You can add a column for "Current Pick" later */}
+                </tr>
+              </thead>
+              <tbody>
+                {/* Loop through the leagues and display each one */}
+                {leagues.length > 0 ? (
+                  leagues.map((league) => (
+                    <tr key={league.id}>
+                      <td>{league.name}</td>
+                      <td>
+                        {league.isEliminated ? (
+                          <img src="/svgs/xmark.svg"></img>
+                        ) : (
+                          <img src="/svgs/check.svg" alt="Active" />
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="2">No leagues found</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div className="home-button-container">
+            <button onClick={handleJoinLeagueClick} className="join-league">
+              Join league
+            </button>
+            <button onClick={handleCreateLeagueClick} className="create-league">
+              Create league
+            </button>
+          </div>
+          <h3 className="rules-heading">
+            Unsure how to play? Click{" "}
+            <Link href="#" id="rules-link">
+              here
+            </Link>{" "}
+            to find out
+          </h3>
+        </div>
+        <div className="home-right-container">
+          <h1>Upcoming scores and fixtures</h1>
+          <p id="your-teams">Your Teams</p>
+          <table>
+            <tbody>
+              <tr>
+                <td>
+                  <img src="/team-images/aston-villa.png" width="24px" alt="Aston Villa" />
+                </td>
+                <td>1 - 0</td>
+                <td>
+                  <img src="/team-images/arsenal.png" width="24px" alt="Arsenal" />
+                </td>
+              </tr>
+              {/* Additional rows for other fixtures */}
+            </tbody>
+          </table>
+          <p>Elsewhere</p>
+          <table>
+            <tbody>
+              <tr>
+                <td>
+                  <img src="/team-images/aston-villa.png" width="24px" alt="Aston Villa" />
+                </td>
+                <td>1 - 0</td>
+                <td>
+                  <img src="/team-images/arsenal.png" width="24px" alt="Arsenal" />
+                </td>
+              </tr>
+              {/* Additional rows for other fixtures */}
+            </tbody>
+          </table>
+        </div>
       </div>
+      {showJoinLeague && <JoinLeague onClose={() => setShowJoinLeague(false)} />}
+      {showCreateLeague && <CreateLeague onClose={() => setShowCreateLeague(false)} />}
     </main>
   );
 }
