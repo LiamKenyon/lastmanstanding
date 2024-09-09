@@ -31,7 +31,6 @@ export default function Home() {
   const { data: session, status } = useSession();
 
   useEffect(() => {
-    // Fetch leagues data when the component mounts
     const fetchLeagues = async () => {
       try {
         const data = await getUserLeagues();
@@ -54,6 +53,14 @@ export default function Home() {
     setShowJoinLeague(false); // Hide Join League when Create League is shown
   };
 
+  if (status === "loading") {
+    return <div>Loading...</div>;
+  }
+
+  if (!session) {
+    return <div>Please log in to view your leagues.</div>;
+  }
+
   return (
     <main className="home-page">
       <Navbar />
@@ -69,18 +76,18 @@ export default function Home() {
                 <tr>
                   <th>Name</th>
                   <th>Status</th>
-                  {/* You can add a column for "Current Pick" later */}
                 </tr>
               </thead>
               <tbody>
-                {/* Loop through the leagues and display each one */}
                 {leagues.length > 0 ? (
                   leagues.map((league) => (
                     <tr key={league.id}>
-                      <td>{league.name}</td>
+                      <td>
+                        <Link href={`/pick-team/${session.user.sub}/${league.id}`}>{league.name}</Link>
+                      </td>
                       <td>
                         {league.isEliminated ? (
-                          <img src="/svgs/xmark.svg"></img>
+                          <img src="/svgs/xmark.svg" alt="Eliminated" />
                         ) : (
                           <img src="/svgs/check.svg" alt="Active" />
                         )}
@@ -125,7 +132,6 @@ export default function Home() {
                   <img src="/team-images/arsenal.png" width="24px" alt="Arsenal" />
                 </td>
               </tr>
-              {/* Additional rows for other fixtures */}
             </tbody>
           </table>
           <p>Elsewhere</p>
@@ -140,7 +146,6 @@ export default function Home() {
                   <img src="/team-images/arsenal.png" width="24px" alt="Arsenal" />
                 </td>
               </tr>
-              {/* Additional rows for other fixtures */}
             </tbody>
           </table>
         </div>
