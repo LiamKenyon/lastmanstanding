@@ -5,14 +5,17 @@ import { useState, useEffect } from "react";
 // Dummy API route for submitting selected team
 const submitPick = async (userId, leagueId, selectedTeam) => {
   console.log(selectedTeam);
-  /*
-  const response = await fetch(`/api/submit-pick/${userId}/${leagueId}`, {
+  console.log(userId);
+
+  const response = await fetch(`/api/submit-pick`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
       selectedTeam,
+      userId,
+      leagueId,
     }),
   });
 
@@ -21,11 +24,11 @@ const submitPick = async (userId, leagueId, selectedTeam) => {
   }
 
   return response.json();
-  */
 };
 
 // Fetch available picks
 const getPicks = async (userId, leagueId) => {
+  console.log("USERID", userId);
   const response = await fetch(`/api/get-available-picks/${userId}/${leagueId}`, {
     method: "GET",
     headers: {
@@ -50,14 +53,14 @@ export default function PickTeam({ params }) {
     const fetchPicks = async () => {
       try {
         const data = await getPicks(params.userId, params.leagueId);
-        setPicks(data);
+        setPicks(data.availablePicks); // Data is now an array of team names
       } catch (err) {
         setError(err.message);
       }
     };
 
     fetchPicks();
-  }, [params.userId, params.leagueId]);
+  }, []);
 
   const handleTeamClick = (teamName) => {
     setSelectedTeam(teamName);
@@ -95,27 +98,17 @@ export default function PickTeam({ params }) {
       <h1>Available Picks</h1>
       <form onSubmit={handleSubmit}>
         <ul>
-          {picks.availablePicks.map((pick) => (
-            <li key={pick.id} style={{ marginBottom: "10px" }}>
+          {picks.map((teamName, index) => (
+            <li key={index} style={{ marginBottom: "10px" }}>
               <div
-                onClick={() => handleTeamClick(pick.homeTeam)}
+                onClick={() => handleTeamClick(teamName)}
                 style={{
                   cursor: "pointer",
-                  border: selectedTeam === pick.homeTeam ? "2px solid blue" : "1px solid gray",
+                  border: selectedTeam === teamName ? "2px solid blue" : "1px solid gray",
                   padding: "10px",
                 }}
               >
-                <h2>{pick.homeTeam} (Home)</h2>
-              </div>
-              <div
-                onClick={() => handleTeamClick(pick.awayTeam)}
-                style={{
-                  cursor: "pointer",
-                  border: selectedTeam === pick.awayTeam ? "2px solid blue" : "1px solid gray",
-                  padding: "10px",
-                }}
-              >
-                <h2>{pick.awayTeam} (Away)</h2>
+                <h2>{teamName}</h2>
               </div>
             </li>
           ))}
