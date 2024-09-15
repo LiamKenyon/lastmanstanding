@@ -7,7 +7,6 @@ async function getPickableGames() {
   );
 
   const endDate = formattedDates[formattedDates.length - 1]; // Last day of the week (e.g., Sunday)
-  console.log(formattedDates);
   const games = await prisma.games.findMany({
     where: {
       date: {

@@ -13,6 +13,7 @@ model league_users {
   user_id       String
   leagues       leagues? @relation(fields: [league_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   isEliminated  Boolean  @default(false)
+  canPick       Boolean  @default(true)
 
   @@unique([league_id, user_id], map: "sqlite_autoindex_league_users_1")
 }

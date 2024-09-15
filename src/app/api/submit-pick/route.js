@@ -13,6 +13,26 @@ export async function POST(req) {
     });
   }
 
+  // Check if the users canPick is false
+  const user = await prisma.league_users.findUnique({
+    where: {
+      league_id_user_id: {
+        league_id: parseInt(formData.leagueId),
+        user_id: formData.userId,
+      },
+    },
+    select: {
+      canPick: true,
+      isEliminated: true,
+    },
+  });
+
+  if (!user.canPick || user.isEliminated) {
+    return new Response(JSON.stringify({ message: "You cannot make a pick at this time." }), {
+      status: 400,
+    });
+  }
+
   // Fetch the user's previous picks for this league
   const picks = await prisma.picks.findMany({
     where: {
@@ -39,6 +59,19 @@ export async function POST(req) {
       user_id: formData.userId,
       league_id: parseInt(formData.leagueId),
       teamName: formData.selectedTeam,
+    },
+  });
+
+  // Update the user's canPick status
+  await prisma.league_users.update({
+    where: {
+      league_id_user_id: {
+        user_id: formData.userId,
+        league_id: parseInt(formData.leagueId),
+      },
+    },
+    data: {
+      canPick: false,
     },
   });
 

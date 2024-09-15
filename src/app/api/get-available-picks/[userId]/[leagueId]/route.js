@@ -5,6 +5,7 @@ import { getPickableGames } from "../../../../../../scripts/getPickableGames";
 
 export async function GET(req, { params }) {
   const availablePicks = await getPickableGames();
+
   const { userId, leagueId } = params;
 
   // Check if the user is authenticated
@@ -28,6 +29,7 @@ export async function GET(req, { params }) {
 
   // Extract team names
   const teamNames = picks.map((pick) => pick.teamName);
+  console.log(teamNames);
   // Filter out teams that have already been picked
   const filteredAvailablePicks = availablePicks.filter((pickableTeam) => !teamNames.includes(pickableTeam));
   // Return the filtered available picks
