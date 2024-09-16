@@ -26,6 +26,7 @@ model leagues {
   user_id      String
   gameWeekNo   Int       @default(1)
   gameWeekDate DateTime  @default(now())
+  isActive     Boolean   @default(true)
 
   league_users league_users[]
   picks        picks[]
