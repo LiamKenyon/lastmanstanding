@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:../db.sqlite"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model league_users {
@@ -15,13 +15,13 @@ model league_users {
   isEliminated  Boolean  @default(false)
   canPick       Boolean  @default(true)
 
-  @@unique([league_id, user_id], map: "sqlite_autoindex_league_users_1")
+  @@unique([league_id, user_id])
 }
 
 model leagues {
   id           Int       @id @default(autoincrement())
   name         String
-  code         String    @unique(map: "sqlite_autoindex_leagues_1")
+  code         String    @unique
   created_at   DateTime? @default(now())
   user_id      String
   gameWeekNo   Int       @default(1)
@@ -53,6 +53,7 @@ model picks {
   user_id   String
   league_id Int
   teamName  String
+  date      DateTime
   leagues    leagues @relation(fields: [league_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([user_id, league_id, teamName], map: "unique_user_league_team_pick")

@@ -27,13 +27,19 @@ export async function GET(req, { params }) {
     },
   });
 
-  // Extract team names
+  // Extract team names from the user's picks
   const teamNames = picks.map((pick) => pick.teamName);
-  console.log(teamNames);
-  // Filter out teams that have already been picked
-  const filteredAvailablePicks = availablePicks.filter((pickableTeam) => !teamNames.includes(pickableTeam));
-  // Return the filtered available picks
-  return new Response(JSON.stringify({ userId, leagueId, availablePicks: filteredAvailablePicks }), {
-    status: 200,
-  });
+
+  // Filter out objects where team is in the user's picks
+  const filteredAvailablePicks = availablePicks.filter(
+    (pickable) => !teamNames.includes(pickable.team)
+  );
+
+  // Return the filtered available picks with date information
+  return new Response(
+    JSON.stringify({ userId, leagueId, availablePicks: filteredAvailablePicks }),
+    {
+      status: 200,
+    }
+  );
 }

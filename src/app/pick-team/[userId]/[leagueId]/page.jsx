@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 
 // Dummy API route for submitting selected team
-const submitPick = async (userId, leagueId, selectedTeam) => {
-  console.log(selectedTeam);
+const submitPick = async (userId, leagueId, selectedPick) => {
+  console.log(selectedPick);
   console.log(userId);
 
   const response = await fetch(`/api/submit-pick`, {
@@ -13,7 +13,7 @@ const submitPick = async (userId, leagueId, selectedTeam) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      selectedTeam,
+      selectedPick,
       userId,
       leagueId,
     }),
@@ -35,7 +35,6 @@ const getPicks = async (userId, leagueId) => {
       "Content-Type": "application/json",
     },
   });
-
   if (!response.ok) {
     throw new Error("Failed to fetch picks");
   }
@@ -45,7 +44,7 @@ const getPicks = async (userId, leagueId) => {
 
 export default function PickTeam({ params }) {
   const [picks, setPicks] = useState(null);
-  const [selectedTeam, setSelectedTeam] = useState(null);
+  const [selectedPick, setSelectedPick] = useState(null);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
@@ -53,31 +52,32 @@ export default function PickTeam({ params }) {
     const fetchPicks = async () => {
       try {
         const data = await getPicks(params.userId, params.leagueId);
-        setPicks(data.availablePicks); // Data is now an array of team names
+        console.log(data);
+        setPicks(data.availablePicks); // Data is now an array of objects with team and date
       } catch (err) {
         setError(err.message);
       }
     };
 
     fetchPicks();
-  }, []);
+  }, [params.userId, params.leagueId]);
 
-  const handleTeamClick = (teamName) => {
-    setSelectedTeam(teamName);
+  const handleTeamClick = (team, date) => {
+    setSelectedPick({ team, date });
     setSuccessMessage(null); // Reset success message on new selection
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!selectedTeam) {
+    if (!selectedPick) {
       setError("No team selected!");
       return;
     }
 
     try {
-      await submitPick(params.userId, params.leagueId, selectedTeam);
-      setSuccessMessage(`Pick submitted successfully for ${selectedTeam}!`);
+      await submitPick(params.userId, params.leagueId, selectedPick);
+      setSuccessMessage(`Pick submitted successfully for ${selectedPick.team}!`);
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -98,23 +98,24 @@ export default function PickTeam({ params }) {
       <h1>Available Picks</h1>
       <form onSubmit={handleSubmit}>
         <ul>
-          {picks.map((teamName, index) => (
+          {picks.map((pick, index) => (
             <li key={index} style={{ marginBottom: "10px" }}>
               <div
-                onClick={() => handleTeamClick(teamName)}
+                onClick={() => handleTeamClick(pick.team, pick.date)}
                 style={{
                   cursor: "pointer",
-                  border: selectedTeam === teamName ? "2px solid blue" : "1px solid gray",
+                  border: selectedPick?.team === pick.team ? "2px solid blue" : "1px solid gray",
                   padding: "10px",
                 }}
               >
-                <h2>{teamName}</h2>
+                <h2>{pick.team}</h2>
+                {/* You may choose to display the date here if needed */}
               </div>
             </li>
           ))}
         </ul>
 
-        <button type="submit" disabled={!selectedTeam}>
+        <button type="submit" disabled={!selectedPick}>
           Submit Pick
         </button>
       </form>

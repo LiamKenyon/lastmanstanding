@@ -7,6 +7,7 @@ async function getPickableGames() {
   );
 
   const endDate = formattedDates[formattedDates.length - 1]; // Last day of the week (e.g., Sunday)
+
   const games = await prisma.games.findMany({
     where: {
       date: {
@@ -20,12 +21,13 @@ async function getPickableGames() {
     },
   });
 
-  // Extract and combine homeTeam and awayTeam into a single array
-  const teamNames = games.flatMap((game) => [game.homeTeam, game.awayTeam]);
+  // Create an array of objects containing homeTeam and date, and awayTeam and date
+  const gameDetails = games.flatMap((game) => [
+    { team: game.homeTeam, date: game.date },
+    { team: game.awayTeam, date: game.date },
+  ]);
 
-  // Return an array of unique team names (to avoid duplicates)
-  const uniqueTeamNames = [...new Set(teamNames)];
-  return uniqueTeamNames;
+  return gameDetails;
 }
 
 module.exports = { getPickableGames };

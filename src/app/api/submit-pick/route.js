@@ -4,8 +4,8 @@ import { authOptions } from "../auth/[...nextauth]/route";
 
 export async function POST(req) {
   const formData = await req.json();
+  console.log("formdata: ", formData);
 
-  // Check if the user is authenticated
   const session = await getServerSession(authOptions);
   if (!session) {
     return new Response(JSON.stringify({ message: "Unauthorized" }), {
@@ -49,8 +49,10 @@ export async function POST(req) {
   console.log("User's previous picks:", teamNames);
 
   // Check if the selected team has already been picked
-  if (teamNames.includes(formData.selectedTeam)) {
-    return new Response(JSON.stringify({ message: "You have already picked this team." }), { status: 400 });
+  if (teamNames.includes(formData.selectedPick.team)) {
+    return new Response(JSON.stringify({ message: "You have already picked this team." }), {
+      status: 400,
+    });
   }
 
   // Insert the new pick into the database
@@ -58,7 +60,8 @@ export async function POST(req) {
     data: {
       user_id: formData.userId,
       league_id: parseInt(formData.leagueId),
-      teamName: formData.selectedTeam,
+      teamName: formData.selectedPick.team,
+      date: formData.selectedPick.date,
     },
   });
 

@@ -1,4 +1,5 @@
 // Scrapes todays games to update the database with the latest scores
+
 const { generateFormattedDatesUntilSunday } = require("../lib/utils");
 const fetch = require("node-fetch");
 const prisma = require("../lib/prisma");
@@ -6,7 +7,7 @@ const prisma = require("../lib/prisma");
 async function scrapeTodaysScores() {
   let games = [];
   total = 0;
-  const todayDate = generateFormattedDatesUntilSunday()[0].formatDateAPI;
+  const todayDate = generateFormattedDatesUntilSunday()[5].formatDateAPI;
   const requestUrl = `https://www.bbc.co.uk/wc-data/container/sport-data-scores-fixtures?selectedEndDate=${todayDate}&selectedStartDate=${todayDate}&todayDate=${todayDate}&urn=urn%3Abbc%3Asportsdata%3Afootball%3Atournament%3Apremier-league&useSdApi=false`;
   const response = await fetch(requestUrl);
   const data = await response.json();
@@ -42,11 +43,25 @@ async function scrapeTodaysScores() {
   if (games.length > 0) {
     console.log(games);
     await saveScoresToDatabase(games);
+  } else {
+    console.log("No games today");
   }
 }
 
 async function saveScoresToDatabase(scores) {
   for (const score of scores) {
+    // Find the existing game in the database
+    const existingGame = await prisma.games.findUnique({
+      where: {
+        date_homeTeam_awayTeam: {
+          date: new Date(score.date),
+          homeTeam: score.homeTeam,
+          awayTeam: score.awayTeam,
+        },
+      },
+    });
+
+    // Update the game as normal
     await prisma.games.upsert({
       where: {
         date_homeTeam_awayTeam: {
@@ -74,7 +89,24 @@ async function saveScoresToDatabase(scores) {
         eventProgress: score.eventProgress,
       },
     });
+
+    // Check if the scraped status is "PostEvent" and the DB status is different
+    if (score.eventProgress === "PostEvent" && existingGame?.eventProgress !== "PreEvent") {
+      TestFunction(); // Call the additional function if conditions are met
+      // Get all active leagues
+      // If the home team didn't win, set all users who picked the home team to eliminated
+      // If the away team didn't win, set all users who picked the away team to eliminated
+      const leagues = await prisma.leagues.findMany({
+        where: {
+          isActive: true,
+        },
+      });
+    }
   }
+}
+
+function TestFunction() {
+  console.log("PostEvent detected, TestFunction called!");
 }
 
 scrapeTodaysScores();
