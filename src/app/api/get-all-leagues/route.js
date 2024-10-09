@@ -27,7 +27,6 @@ export async function GET(req, res) {
       isEliminated: leagueUser.isEliminated, // Add the isEliminated field from league_users
     }));
 
-    console.log(leagueDetails);
     return new Response(JSON.stringify(leagueDetails), {
       status: 200,
     });
