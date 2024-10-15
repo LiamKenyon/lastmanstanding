@@ -144,6 +144,7 @@ export default function HomePage() {
 
       if (response.ok) {
         console.log("League joined successfully");
+        window.location.reload();
       } else {
         console.error("Failed to join league");
       }
@@ -170,6 +171,7 @@ export default function HomePage() {
 
       if (response.ok) {
         console.log("League created successfully");
+        window.location.reload();
       } else {
         console.error("Failed to create league");
       }
