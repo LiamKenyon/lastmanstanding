@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { generateFormattedDatesUntilSunday } from "../lib/utils.js";
+import { generateFormattedDatesUntilPreviousSunday } from "../lib/utils.js";
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -7,7 +7,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
-// Manually match Premier League team names to image paths
+// Function to manually match Premier League team names to image paths
 const getTeamImage = (teamName) => {
   switch (teamName) {
     case "Arsenal":
@@ -55,47 +55,40 @@ const getTeamImage = (teamName) => {
   }
 };
 
-export async function getPickableGames() {
-  const formattedDates = generateFormattedDatesUntilSunday().map(
+export async function getPreviousScores() {
+  const formattedDates = generateFormattedDatesUntilPreviousSunday().map(
     (dateObj) => dateObj.formatDateISO
   );
 
-  const endDate = formattedDates[formattedDates.length - 2]; // Last day of the week (e.g., Sunday)
-  const currentDate = new Date().toISOString().slice(0, 10); // Current date formatted as YYYY-MM-DD
+  const endDate = new Date().toISOString().slice(0, 10);
+  const currentDate = formattedDates[formattedDates.length - 1];
 
-  // Perform the query to get games that are "PreEvent" and within the date range
+  // Perform the query to get games that are "PostEvent" and within the date range
   const { data: games, error } = await supabase
     .from("games")
-    .select("homeTeam, awayTeam, date, eventProgress")
-    .gt("date", currentDate) // Greater than current date
+    .select("homeTeam, awayTeam, homeScore, awayScore, date, id")
+    .gt("date", currentDate) // Greater than or equal to the current date
     .lte("date", endDate) // Less than or equal to the end of the week
-    .eq("eventProgress", "PreEvent")
+    .eq("eventProgress", "PostEvent")
     .order("date", { ascending: true });
 
   if (error) {
-    console.error("Error fetching pickable games:", error);
+    console.error("Error fetching previous scores:", error);
     return [];
   }
 
-  // Create an array of objects containing homeTeam, awayTeam, date, and team images
-  const gameDetails = games.flatMap((game) => [
-    {
-      team: game.homeTeam,
-      date: game.date,
-      opponent: game.awayTeam,
-      teamImg: getTeamImage(game.homeTeam), // Add home team image
-    },
-    {
-      team: game.awayTeam,
-      date: game.date,
-      opponent: game.homeTeam,
-      teamImg: getTeamImage(game.awayTeam), // Add away team image
-    },
-  ]);
+  // Create an array of objects containing homeTeam, awayTeam, homeScore, awayScore, date, and image paths
+  const gameDetails = games.map((game) => ({
+    homeTeam: game.homeTeam,
+    awayTeam: game.awayTeam,
+    homeScore: game.homeScore,
+    awayScore: game.awayScore,
+    date: game.date,
+    id: game.id,
+    homeImg: getTeamImage(game.homeTeam), // Get image path for home team
+    awayImg: getTeamImage(game.awayTeam), // Get image path for away team
+  }));
 
   console.log(gameDetails);
   return gameDetails;
 }
-
-// Trigger the score scraping for testing
-getPickableGames();
