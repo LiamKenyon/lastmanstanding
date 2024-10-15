@@ -1,51 +1,61 @@
-import prisma from "../../../../lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { createClient } from "../../../../utils/supabase/server.js";
 
 export async function POST(req) {
+  const supabase = createClient();
   const formData = await req.json();
   console.log("formdata: ", formData);
 
-  const session = await getServerSession(authOptions);
-  if (!session) {
+  // Get the authenticated user from Supabase
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  // Check if the user is authenticated
+  if (userError || !user) {
     return new Response(JSON.stringify({ message: "Unauthorized" }), {
       status: 401,
     });
   }
 
-  // Check if the users canPick is false
-  const user = await prisma.league_users.findUnique({
-    where: {
-      league_id_user_id: {
-        league_id: parseInt(formData.leagueId),
-        user_id: formData.userId,
-      },
-    },
-    select: {
-      canPick: true,
-      isEliminated: true,
-    },
-  });
+  // Check if the user is allowed to make a pick (i.e., canPick is true and isEliminated is false)
+  const { data: leagueUser, error: leagueUserError } = await supabase
+    .from("league_users")
+    .select("canPick, isEliminated")
+    .eq("user_id", formData.userId)
+    .eq("league_id", parseInt(formData.leagueId))
+    .single(); // We expect a single record (composite key)
 
-  if (!user.canPick || user.isEliminated) {
+  if (leagueUserError || !leagueUser) {
+    console.error("Error fetching league user:", leagueUserError?.message);
+    return new Response(JSON.stringify({ message: "User not found in league." }), {
+      status: 400,
+    });
+  }
+
+  // Check if the user can make a pick or is eliminated
+  if (!leagueUser.canPick || leagueUser.isEliminated) {
     return new Response(JSON.stringify({ message: "You cannot make a pick at this time." }), {
       status: 400,
     });
   }
 
   // Fetch the user's previous picks for this league
-  const picks = await prisma.picks.findMany({
-    where: {
-      user_id: formData.userId,
-      league_id: parseInt(formData.leagueId),
-    },
-    select: {
-      teamName: true,
-    },
-  });
+  const { data: previousPicks, error: previousPicksError } = await supabase
+    .from("picks")
+    .select("teamName")
+    .eq("user_id", formData.userId)
+    .eq("league_id", parseInt(formData.leagueId));
+
+  if (previousPicksError) {
+    console.error("Error fetching previous picks:", previousPicksError.message);
+    return new Response(JSON.stringify({ message: "Error fetching picks." }), {
+      status: 500,
+    });
+  }
 
   // Extract team names from previous picks
-  const teamNames = picks.map((pick) => pick.teamName);
+  const teamNames = previousPicks.map((pick) => pick.teamName);
   console.log("User's previous picks:", teamNames);
 
   // Check if the selected team has already been picked
@@ -56,29 +66,38 @@ export async function POST(req) {
   }
 
   // Insert the new pick into the database
-  const insertPick = await prisma.picks.create({
-    data: {
+  const { data: newPick, error: insertPickError } = await supabase
+    .from("picks")
+    .insert({
       user_id: formData.userId,
       league_id: parseInt(formData.leagueId),
       teamName: formData.selectedPick.team,
       date: formData.selectedPick.date,
-    },
-  });
+    })
+    .select(); // To return the inserted data if necessary
 
-  // Update the user's canPick status
-  await prisma.league_users.update({
-    where: {
-      league_id_user_id: {
-        user_id: formData.userId,
-        league_id: parseInt(formData.leagueId),
-      },
-    },
-    data: {
-      canPick: false,
-    },
-  });
+  if (insertPickError) {
+    console.error("Error inserting new pick:", insertPickError.message);
+    return new Response(JSON.stringify({ message: "Error submitting pick." }), {
+      status: 500,
+    });
+  }
 
-  console.log("Inserted pick:", insertPick);
+  // Update the user's canPick status to false
+  const { error: updateCanPickError } = await supabase
+    .from("league_users")
+    .update({ canPick: false })
+    .eq("user_id", formData.userId)
+    .eq("league_id", parseInt(formData.leagueId));
+
+  if (updateCanPickError) {
+    console.error("Error updating canPick status:", updateCanPickError.message);
+    return new Response(JSON.stringify({ message: "Error updating user status." }), {
+      status: 500,
+    });
+  }
+
+  console.log("Inserted pick:", newPick);
 
   return new Response(JSON.stringify({ message: "Pick submitted successfully." }), {
     status: 200,

@@ -1,14 +1,29 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { createClient } from "../../../utils/supabase/client";
 import { useState, useEffect } from "react";
-import Navbar from "../../../components/Navbar";
-import Link from "next/link";
-import JoinLeague from "../../../components/JoinLeague";
-import CreateLeague from "../../../components/CreateLeague";
 
-const getUserLeagues = async () => {
-  const response = await fetch("/api/get-all-leagues", {
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
+const getUserLeagues = async (userId) => {
+  const response = await fetch(`/api/get-all-leagues`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -22,136 +37,416 @@ const getUserLeagues = async () => {
   return response.json();
 };
 
-export default function Home() {
-  const [leagues, setLeagues] = useState([]);
-  const [error, setError] = useState(null);
-  const [showJoinLeague, setShowJoinLeague] = useState(false);
-  const [showCreateLeague, setShowCreateLeague] = useState(false);
+const getPreviousScores = async () => {
+  const response = await fetch(`/api/get-previous-results`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 
-  const { data: session, status } = useSession();
+  if (!response.ok) {
+    throw new Error("Failed to fetch previous scores");
+  }
+
+  return response.json();
+};
+
+// Mock data for leagues
+// const leagues = [
+//   { id: 1, name: "Premier League Survivors", members: 124, status: "active" },
+//   { id: 2, name: "Champions League Challenge", members: 56, status: "active" },
+//   { id: 3, name: "Euro 2024 Predictor", members: 89, status: "upcoming" },
+// ];
+
+// Mock data for fixtures and results
+// const fixturesAndResults = [
+//   { id: 1, homeTeam: "Arsenal", awayTeam: "Chelsea", score: "2 - 1", date: "2023-05-02" },
+//   { id: 2, homeTeam: "Liverpool", awayTeam: "Man United", score: "Upcoming", date: "2023-05-07" },
+//   { id: 3, homeTeam: "Man City", awayTeam: "Tottenham", score: "3 - 0", date: "2023-04-29" },
+//   { id: 4, homeTeam: "Newcastle", awayTeam: "Everton", score: "Upcoming", date: "2023-05-08" },
+//   { id: 5, homeTeam: "West Ham", awayTeam: "Crystal Palace", score: "1 - 1", date: "2023-04-30" },
+// ];
+
+export default function HomePage() {
+  const [leagues, setLeagues] = useState([]);
+  const [user, setUser] = useState(null);
+  const [fixturesAndResults, setFixturesAndResults] = useState([]);
+  const [leagueCode, setLeagueCode] = useState("");
+  const [leagueName, setLeagueName] = useState("");
 
   useEffect(() => {
-    const fetchLeagues = async () => {
-      try {
-        const data = await getUserLeagues();
-        setLeagues(data);
-      } catch (err) {
-        setError(err.message);
+    const supabase = createClient();
+
+    const checkAuth = async () => {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+      console.log("THIS IS THE USER", user);
+
+      if (user != null) {
+        setUser(user);
+        fetchLeagues(user.id);
+        console.log("THERE IS A USER");
+        fetchPreviousScores();
+      } else {
+        // If there's no user, redirect to login
+        console.log("NO USER");
+        window.location.href = "/login";
       }
     };
 
-    fetchLeagues();
+    checkAuth();
   }, []);
 
-  const handleJoinLeagueClick = () => {
-    setShowJoinLeague(!showJoinLeague);
-    setShowCreateLeague(false); // Hide Create League when Join League is shown
+  const fetchLeagues = async (userId) => {
+    try {
+      const data = await getUserLeagues(userId);
+      setLeagues(data);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
-  const handleCreateLeagueClick = () => {
-    setShowCreateLeague(!showCreateLeague);
-    setShowJoinLeague(false); // Hide Join League when Create League is shown
+  const fetchPreviousScores = async () => {
+    try {
+      const data = await getPreviousScores();
+      setFixturesAndResults(data);
+    } catch (err) {
+      console.log(err.message);
+    }
   };
 
-  if (status === "loading") {
-    return <div>Loading...</div>;
-  }
+  const handleLogout = async () => {
+    const supabase = createClient();
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Error signing out:", error.message);
+    } else {
+      // Redirect to home or login page after logout
+      window.location.href = "/login";
+    }
+  };
 
-  if (!session) {
-    return <div>Please log in to view your leagues.</div>;
-  }
+  const handleJoinLeague = async (e) => {
+    e.preventDefault();
+
+    const formData = { leagueCode };
+    try {
+      const response = await fetch("/api/join-league", {
+        method: "POST",
+        headers: {
+          "Conent-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        console.log("League joined successfully");
+      } else {
+        console.error("Failed to join league");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  const handleCreateLeague = async (e) => {
+    e.preventDefault();
+    const formData = {
+      leagueName,
+    };
+    console.log("THIS IS THE FORM DATA", formData);
+
+    try {
+      const response = await fetch("/api/create-league", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        console.log("League created successfully");
+      } else {
+        console.error("Failed to create league");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
 
   return (
-    <main className="home-page">
-      <Navbar />
-      <div className="home-container">
-        <div className="home-left-container">
-          <h1>
-            View Your <br />
-            Active Leagues
-          </h1>
-          <div className="active-leagues-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leagues.length > 0 ? (
-                  leagues.map((league) => (
-                    <tr key={league.id}>
-                      <td>
-                        <Link href={`/pick-team/${session.user.sub}/${league.id}`}>{league.name}</Link>
-                      </td>
-                      <td>
-                        {league.isEliminated ? (
-                          <img src="/svgs/xmark.svg" alt="Eliminated" />
-                        ) : (
-                          <img src="/svgs/check.svg" alt="Active" />
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="2">No leagues found</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          <div className="home-button-container">
-            <button onClick={handleJoinLeagueClick} className="join-league">
-              Join league
-            </button>
-            <button onClick={handleCreateLeagueClick} className="create-league">
-              Create league
-            </button>
-          </div>
-          <h3 className="rules-heading">
-            Unsure how to play? Click{" "}
-            <Link href="#" id="rules-link">
-              here
-            </Link>{" "}
-            to find out
-          </h3>
+    <div className="min-h-screen bg-background">
+      <header className="border-b bg-[#4a82b0] text-white">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Football Last Man Standing</h1>
+          <nav>
+            <Button variant="ghost" asChild className="text-white hover:text-[#e01883]">
+              <Link href="#">Profile</Link>
+            </Button>
+            <Button
+              onClick={handleLogout}
+              variant="ghost"
+              asChild
+              className="text-white hover:text-[#e01883] hover:cursor-pointer"
+            >
+              <span>Logout</span>
+            </Button>
+          </nav>
         </div>
-        <div className="home-right-container">
-          <h1>Upcoming scores and fixtures</h1>
-          <p id="your-teams">Your Teams</p>
-          <table>
-            <tbody>
-              <tr>
-                <td>
-                  <img src="/team-images/aston-villa.png" width="24px" alt="Aston Villa" />
-                </td>
-                <td>1 - 0</td>
-                <td>
-                  <img src="/team-images/arsenal.png" width="24px" alt="Arsenal" />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <p>Elsewhere</p>
-          <table>
-            <tbody>
-              <tr>
-                <td>
-                  <img src="/team-images/aston-villa.png" width="24px" alt="Aston Villa" />
-                </td>
-                <td>1 - 0</td>
-                <td>
-                  <img src="/team-images/arsenal.png" width="24px" alt="Arsenal" />
-                </td>
-              </tr>
-            </tbody>
-          </table>
+      </header>
+      <main className="container mx-auto px-4 py-8">
+        <div className="grid gap-8 md:grid-cols-2">
+          <section aria-labelledby="leagues-title">
+            <div className="flex justify-between items-center mb-4">
+              <h2
+                id="leagues-title"
+                className="text-xl font-semibold text-[#4a82b0] dark:text-[#7ab3e0]"
+              >
+                Your Leagues
+              </h2>
+              <div className="space-x-2">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline">Create League</Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <form onSubmit={handleCreateLeague}>
+                      <DialogHeader>
+                        <DialogTitle>Create a New League</DialogTitle>
+                        <DialogDescription>Enter a name for your new league.</DialogDescription>
+                      </DialogHeader>
+                      <div className="py-4">
+                        <Label htmlFor="league-name">League Name</Label>
+                        <Input
+                          id="league-name"
+                          value={leagueName}
+                          onChange={(e) => setLeagueName(e.target.value)}
+                          placeholder="Enter league name"
+                        />
+                      </div>
+                      <DialogFooter>
+                        <Button type="submit">Create League</Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline">Join League</Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <form onSubmit={handleJoinLeague}>
+                      <DialogHeader>
+                        <DialogTitle>Join a League</DialogTitle>
+                        <DialogDescription>Enter the league code to join.</DialogDescription>
+                      </DialogHeader>
+                      <div className="py-4">
+                        <Label htmlFor="league-code">League Code</Label>
+                        <Input
+                          id="league-code"
+                          value={leagueCode}
+                          onChange={(e) => setLeagueCode(e.target.value)}
+                          placeholder="Enter league code"
+                        />
+                      </div>
+                      <DialogFooter>
+                        <Button type="submit">Join League</Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+            <Card className="border-t-4 border-t-[#e01883]">
+              <CardHeader>
+                <CardTitle>Active and Upcoming Leagues</CardTitle>
+                <CardDescription>Leagues you're participating in or can join</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[300px]">
+                  <ul className="space-y-4">
+                    {leagues.map((league) => (
+                      <li key={league.id}>
+                        <Card>
+                          <Link
+                            href={`/new-pick-team/${user.id}/${league.id}`}
+                            className="cursor-pointer"
+                          >
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                              <CardTitle className="text-sm font-medium">{league.name}</CardTitle>
+                              <div className="flex flex-col gap-2">
+                                {league.winner && (
+                                  <Badge className="bg-[#4CAF50] flex items-center justify-center">
+                                    {"Winner"}
+                                  </Badge>
+                                )}
+                                {league.isEliminated && (
+                                  <Badge className="bg-[#FF0000] flex items-center justify-center">
+                                    {"Eliminated"}
+                                  </Badge>
+                                )}
+                                {league.isactive && (
+                                  <Badge className="bg-[#4a82b0] flex items-center justify-center">
+                                    {"Active"}
+                                  </Badge>
+                                )}
+                                {!league.isEliminated && league.canPick && (
+                                  <Badge className="bg-[#FFA500] flex items-center justify-center">
+                                    {"Pick"}
+                                  </Badge>
+                                )}
+                              </div>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="flex gap-8">
+                                <div className="text-sm text-muted-foreground">
+                                  {league.members} members
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  code: {league.code}
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Link>
+                        </Card>
+                      </li>
+                    ))}
+                  </ul>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </section>
+          <section aria-labelledby="fixtures-results-title">
+            <h2 id="fixtures-results-title" className="text-xl font-semibold mb-4 text-[#4a82b0]">
+              Recent Scores & Fixtures
+            </h2>
+            <Card className="border-t-4 border-t-[#e01883]">
+              <Tabs defaultValue="all" className="w-full">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Matches</CardTitle>
+                    <TabsList className="bg-[#4a82b0]/10">
+                      <TabsTrigger
+                        value="all"
+                        className="data-[state=active]:bg-[#4a82b0] data-[state=active]:text-white"
+                      >
+                        All
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="results"
+                        className="data-[state=active]:bg-[#4a82b0] data-[state=active]:text-white"
+                      >
+                        Results
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="fixtures"
+                        className="data-[state=active]:bg-[#4a82b0] data-[state=active]:text-white"
+                      >
+                        Fixtures
+                      </TabsTrigger>
+                    </TabsList>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <TabsContent value="all" className="space-y-4">
+                    {fixturesAndResults.map((match) => (
+                      <div key={match.id} className="flex items-center">
+                        <div className="w-[40%] flex items-center justify-end space-x-2">
+                          <span className="text-sm">{match.homeTeam}</span>
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={match.homeImg} alt={match.homeTeam} />
+                            <AvatarFallback>{match.homeTeam[0]}</AvatarFallback>
+                          </Avatar>
+                        </div>
+                        <div className="w-[20%] text-center px-2">
+                          <span className="font-semibold text-[#e01883] whitespace-nowrap">
+                            {match.score === "Upcoming"
+                              ? match.date
+                              : match.homeScore + " - " + match.awayScore}
+                          </span>
+                        </div>
+                        <div className="w-[40%] flex items-center space-x-2">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={match.awayImg} alt={match.awayTeam} />
+                            <AvatarFallback>{match.awayTeam[0]}</AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm">{match.awayTeam}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </TabsContent>
+                  <TabsContent value="results" className="space-y-4">
+                    {fixturesAndResults
+                      .filter((match) => match.score !== "Upcoming")
+                      .map((match) => (
+                        <div key={match.id} className="flex items-center">
+                          <div className="w-[40%] flex items-center justify-end space-x-2">
+                            <span className="text-sm">{match.homeTeam}</span>
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage src={match.homeImg} alt={match.homeTeam} />
+                              <AvatarFallback>{match.homeTeam[0]}</AvatarFallback>
+                            </Avatar>
+                          </div>
+                          <div className="w-[20%] text-center px-2">
+                            <span className="font-semibold text-[#e01883] whitespace-nowrap">
+                              {match.score === "Upcoming"
+                                ? match.date
+                                : match.homeScore + " - " + match.awayScore}
+                            </span>
+                          </div>
+                          <div className="w-[40%] flex items-center space-x-2">
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage src={match.awayImg} alt={match.awayTeam} />
+                              <AvatarFallback>{match.awayTeam[0]}</AvatarFallback>
+                            </Avatar>
+                            <span className="text-sm">{match.awayTeam}</span>
+                          </div>
+                        </div>
+                      ))}
+                  </TabsContent>
+                  <TabsContent value="fixtures" className="space-y-4">
+                    {fixturesAndResults
+                      .filter((match) => match.score === "Upcoming")
+                      .map((match) => (
+                        <div key={match.id} className="flex items-center">
+                          <div className="w-[40%] flex items-center justify-end space-x-2">
+                            <span className="text-sm">{match.homeTeam}</span>
+                            <Avatar className="h-8 w-8 bg-[#4a82b0]">
+                              <AvatarImage
+                                src={`/placeholder.svg?height=32&width=32`}
+                                alt={match.homeTeam}
+                              />
+                              <AvatarFallback>{match.homeTeam[0]}</AvatarFallback>
+                            </Avatar>
+                          </div>
+                          <div className="w-[20%] text-center px-2">
+                            <span className="text-sm text-[#4a82b0] whitespace-nowrap">
+                              {match.date}
+                            </span>
+                          </div>
+                          <div className="w-[40%] flex items-center space-x-2">
+                            <Avatar className="h-8 w-8 bg-[#4a82b0]">
+                              <AvatarImage
+                                src={`/placeholder.svg?height=32&width=32`}
+                                alt={match.awayTeam}
+                              />
+                              <AvatarFallback>{match.awayTeam[0]}</AvatarFallback>
+                            </Avatar>
+                            <span className="text-sm">{match.awayTeam}</span>
+                          </div>
+                        </div>
+                      ))}
+                  </TabsContent>
+                </CardContent>
+              </Tabs>
+            </Card>
+          </section>
         </div>
-      </div>
-      {showJoinLeague && <JoinLeague onClose={() => setShowJoinLeague(false)} />}
-      {showCreateLeague && <CreateLeague onClose={() => setShowCreateLeague(false)} />}
-    </main>
+      </main>
+    </div>
   );
 }
