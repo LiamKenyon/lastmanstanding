@@ -150,7 +150,6 @@ export default function HomePage() {
     } catch (error) {
       console.error("Error:", error);
     }
-    window.location.reload();
   };
 
   const handleCreateLeague = async (e) => {
@@ -177,7 +176,6 @@ export default function HomePage() {
     } catch (error) {
       console.error("Error:", error);
     }
-    window.location.reload();
   };
 
   return (
