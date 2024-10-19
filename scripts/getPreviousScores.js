@@ -59,17 +59,15 @@ export async function getPreviousScores() {
   const formattedDates = generateFormattedDatesUntilPreviousSunday().map(
     (dateObj) => dateObj.formatDateISO
   );
-
-  const endDate = new Date().toISOString().slice(0, 10);
+  const endDate = new Date().toISOString();
   const currentDate = formattedDates[formattedDates.length - 1];
 
   // Perform the query to get games that are "PostEvent" and within the date range
   const { data: games, error } = await supabase
     .from("games")
-    .select("homeTeam, awayTeam, homeScore, awayScore, date, id")
-    .gt("date", currentDate) // Greater than or equal to the current date
+    .select("homeTeam, awayTeam, homeScore, awayScore, date, id, eventProgress")
+    .gte("date", currentDate) // Greater than or equal to the current date
     .lte("date", endDate) // Less than or equal to the end of the week
-    .eq("eventProgress", "PostEvent")
     .order("date", { ascending: true });
 
   if (error) {
@@ -87,8 +85,8 @@ export async function getPreviousScores() {
     id: game.id,
     homeImg: getTeamImage(game.homeTeam), // Get image path for home team
     awayImg: getTeamImage(game.awayTeam), // Get image path for away team
+    eventProgress: game.eventProgress,
   }));
-
   console.log(gameDetails);
   return gameDetails;
 }

@@ -55,7 +55,6 @@ async function scrapeTodaysScores() {
   let games = [];
   let total = 0;
   const todayDate = generateFormattedDatesUntilSunday()[0].formatDateAPI;
-  console.log(todayDate);
   const requestUrl = `https://www.bbc.co.uk/wc-data/container/sport-data-scores-fixtures?selectedEndDate=${todayDate}&selectedStartDate=${todayDate}&todayDate=${todayDate}&urn=urn%3Abbc%3Asportsdata%3Afootball%3Atournament%3Apremier-league&useSdApi=false`;
 
   const response = await fetch(requestUrl);
@@ -89,7 +88,6 @@ async function scrapeTodaysScores() {
         game.homeOutcome = "unknown";
         game.awayOutcome = "unknown";
       }
-
       games.push(game);
     }
   }
@@ -231,8 +229,6 @@ async function TestFunction(score) {
 
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-
-console.log("Hello from Functions!");
 
 Deno.serve(async (req) => {
   await scrapeTodaysScores();

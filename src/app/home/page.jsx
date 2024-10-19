@@ -346,10 +346,10 @@ export default function HomePage() {
                         Results
                       </TabsTrigger>
                       <TabsTrigger
-                        value="fixtures"
+                        value="live"
                         className="data-[state=active]:bg-[#4a82b0] data-[state=active]:text-white"
                       >
-                        Fixtures
+                        Live
                       </TabsTrigger>
                     </TabsList>
                   </div>
@@ -384,7 +384,7 @@ export default function HomePage() {
                   </TabsContent>
                   <TabsContent value="results" className="space-y-4">
                     {fixturesAndResults
-                      .filter((match) => match.score !== "Upcoming")
+                      .filter((match) => match.eventProgress == "PostEvent")
                       .map((match) => (
                         <div key={match.id} className="flex items-center">
                           <div className="w-[40%] flex items-center justify-end space-x-2">
@@ -411,32 +411,28 @@ export default function HomePage() {
                         </div>
                       ))}
                   </TabsContent>
-                  <TabsContent value="fixtures" className="space-y-4">
+                  <TabsContent value="live" className="space-y-4">
                     {fixturesAndResults
-                      .filter((match) => match.score === "Upcoming")
+                      .filter((match) => match.eventProgress == "MidEvent")
                       .map((match) => (
                         <div key={match.id} className="flex items-center">
                           <div className="w-[40%] flex items-center justify-end space-x-2">
                             <span className="text-sm">{match.homeTeam}</span>
-                            <Avatar className="h-8 w-8 bg-[#4a82b0]">
-                              <AvatarImage
-                                src={`/placeholder.svg?height=32&width=32`}
-                                alt={match.homeTeam}
-                              />
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage src={match.homeImg} alt={match.homeTeam} />
                               <AvatarFallback>{match.homeTeam[0]}</AvatarFallback>
                             </Avatar>
                           </div>
                           <div className="w-[20%] text-center px-2">
-                            <span className="text-sm text-[#4a82b0] whitespace-nowrap">
-                              {match.date}
+                            <span className="font-semibold text-[#e01883] whitespace-nowrap">
+                              {match.score === "Upcoming"
+                                ? match.date
+                                : match.homeScore + " - " + match.awayScore}
                             </span>
                           </div>
                           <div className="w-[40%] flex items-center space-x-2">
-                            <Avatar className="h-8 w-8 bg-[#4a82b0]">
-                              <AvatarImage
-                                src={`/placeholder.svg?height=32&width=32`}
-                                alt={match.awayTeam}
-                              />
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage src={match.awayImg} alt={match.awayTeam} />
                               <AvatarFallback>{match.awayTeam[0]}</AvatarFallback>
                             </Avatar>
                             <span className="text-sm">{match.awayTeam}</span>

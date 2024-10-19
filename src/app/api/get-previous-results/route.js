@@ -18,6 +18,5 @@ export async function GET(req, { params }) {
       status: 401,
     });
   }
-  console.log("Previous Scores:", previousScores);
   return new Response(JSON.stringify(previousScores), { status: 200 });
 }
