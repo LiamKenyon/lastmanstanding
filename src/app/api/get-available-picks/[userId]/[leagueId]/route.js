@@ -6,7 +6,6 @@ export async function GET(req, { params }) {
 
   // Fetch pickable games (this remains unchanged)
   const availablePicks = await getPickableGames();
-
   // Extract userId and leagueId from route parameters
   const { userId, leagueId } = params;
 
@@ -74,6 +73,7 @@ export async function GET(req, { params }) {
       availablePicks: filteredAvailablePicks,
       gameWeeks, // Add gameWeeks as the length of picks
       winner: leagueUser.winner,
+      picks,
     }),
     {
       status: 200,

@@ -113,6 +113,7 @@ export default function HomePage() {
     try {
       const data = await getPreviousScores();
       setFixturesAndResults(data);
+      console.log(data);
     } catch (err) {
       console.log(err.message);
     }

@@ -13,9 +13,6 @@ import confetti from "canvas-confetti";
 
 // Function to submit selected team pick
 const submitPick = async (userId, leagueId, selectedPick) => {
-  console.log(selectedPick);
-  console.log(userId);
-
   const response = await fetch(`/api/submit-pick`, {
     method: "POST",
     headers: {
@@ -47,6 +44,8 @@ const getPicks = async (userId, leagueId) => {
     throw new Error("Failed to fetch picks");
   }
   const data = await response.json();
+  console.log(data);
+
   return data;
 };
 
