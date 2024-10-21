@@ -1,3 +1,0 @@
-Change the request API in other lastmanstanding to get the next 7 days of premier league games, and also check / update todays games
-Then the API in this next app gets the next 7 days worth of games, and either displays KO time or current score
-(But keep size of the box the same).

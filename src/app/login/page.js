@@ -1,93 +1,97 @@
-"use client";
+import { supabase } from "../../../utils/supabase/server";
+import { login } from "./action";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { FcGoogle } from "react-icons/fc";
 
-import { signIn } from "next-auth/react";
-import { useState } from "react";
-import Navbar from "../../../components/Navbar";
-import { useSession } from "next-auth/react";
-
-export default function Login() {
-  const { data: session, status } = useSession();
-
-  if (session) {
-    window.location.href = "/home";
-  }
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const handleEmailChange = (e) => {
-    setEmail(e.target.value);
-  };
-
-  const handlePasswordChange = (e) => {
-    setPassword(e.target.value);
-  };
-
-  const formSubmit = async (e) => {
+export default function LoginPage() {
+  const handleLogin = (e) => {
     e.preventDefault();
-
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await response.json();
-    console.log(data.status);
-    if (response.status === 200) {
-      window.location.href = "/fixtures";
+    // Here you would typically handle the login logic
+    // For now, we'll just show a success message
+    if (email && password) {
+      alert("Login successful!");
+    } else {
+      setError("Please enter both email and password");
     }
   };
 
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-start">
-      <Navbar />
-      <div className="login-header text-primary font-bold text-3xl mb-10">Last Man Standing</div>
-      <div className="form-container">
-        <div method="post" className="login-form flex flex-col items-center justify-center gap-3">
-          <div className="login-text">Log in to LMS</div>
-          <input
-            name="email"
-            type="email"
-            placeholder="Email address"
-            className="my-input"
-            value={email}
-            onChange={handleEmailChange}
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            className="my-input"
-            value={password}
-            onChange={handlePasswordChange}
-          />
-          <button
-            type="submit"
-            onClick={formSubmit}
-            className="btn-primary bg-primary text-white my-button hover:opacity-90"
-          >
-            Log in
-          </button>
-          <button
-            onClick={() => signIn("google")}
-            className="btn-primary bg-black text-white my-button hover:opacity-90 google-button"
-          >
-            <img src="/svgs/icons8-google.svg" alt="Google Icon" className="google-icon" />
-            <div className="google-text">Sign in with Google</div>
-          </button>
-        </div>
+  const handleGoogleLogin = () => {
+    // Here you would typically handle Google login
+    alert("Google login clicked");
+  };
 
-        <div className="help-links text-primary text-xs p-1 underline">
-          <a href="#" className="help-link">
-            Forgot password?
-          </a>
-          <a href="/signup" className="help-link-divider">
-            Sign up for LMS
-          </a>
-        </div>
-      </div>
-    </main>
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#4a82b0]/10">
+      <Card className="w-full max-w-md border-t-4 border-t-[#e01883]">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center text-[#4a82b0]">Login</CardTitle>
+          <CardDescription className="text-center">to Football Last Man Standing</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-[#4a82b0]">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="m@example.com"
+                className="border-[#4a82b0] focus-visible:ring-[#e01883]"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-[#4a82b0]">
+                Password
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                className="border-[#4a82b0] focus-visible:ring-[#e01883]"
+              />
+            </div>
+            {/* {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )} */}
+            <Button type="submit" className="w-full bg-[#4a82b0] hover:bg-[#4a82b0]/90">
+              Login
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="flex flex-col space-y-4">
+          <div className="relative w-full">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-[#4a82b0]/30" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+            </div>
+          </div>
+          <form className="w-full">
+            <Button
+              formAction={login}
+              variant="outline"
+              className="w-full border-[#4a82b0] text-[#4a82b0] hover:bg-[#4a82b0]/10"
+            >
+              <FcGoogle className="mr-2 h-4 w-4" />
+              Login with Google
+            </Button>
+          </form>
+        </CardFooter>
+      </Card>
+    </div>
   );
 }

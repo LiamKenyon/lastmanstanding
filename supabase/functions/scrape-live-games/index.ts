@@ -1,6 +1,49 @@
-import { generateFormattedDatesUntilSunday } from "../lib/utils.js";
-import fetch from "node-fetch";
-import { createClient } from "@supabase/supabase-js";
+// Follow this setup guide to integrate the Deno language server with your editor:
+// https://deno.land/manual/getting_started/setup_your_environment
+// This enables autocomplete, go to definition, etc.
+
+import { createClient } from "jsr:@supabase/supabase-js";
+
+const generateFormattedDatesUntilSunday = () => {
+  const formattedDates = [];
+  const date_ob = new Date();
+  const currentDayOfWeek = date_ob.getDay(); // 0 (Sunday) to 6 (Saturday)
+  const daysUntilSunday = 9 - currentDayOfWeek; // Days remaining until the next Sunday
+
+  for (let i = 0; i < daysUntilSunday; i++) {
+    const tempDate = new Date(date_ob);
+    tempDate.setDate(date_ob.getDate() + i);
+    const weekday = tempDate.toLocaleString("en-us", { weekday: "long" });
+    let date = tempDate.getDate().toString();
+    if (date.length === 1) {
+      date = "0" + date;
+    }
+    let month = (tempDate.getMonth() + 1).toString().padStart(2, "0");
+    let year = tempDate.getFullYear();
+    let monthName = tempDate.toLocaleString("default", { month: "long" });
+
+    const nth = function (d) {
+      if (d > 3 && d < 21) return "th";
+      switch (d % 10) {
+        case 1:
+          return "st";
+        case 2:
+          return "nd";
+        case 3:
+          return "rd";
+        default:
+          return "th";
+      }
+    };
+
+    const formatDatePath = `${weekday}-${date}${nth(date)}-${monthName}`;
+    const formatDateAPI = `${year}-${month}-${date}`;
+    const formatDateISO = tempDate.toISOString(); // ISO 8601 format
+
+    formattedDates.push({ formatDatePath, formatDateAPI, formatDateISO });
+  }
+  return formattedDates;
+};
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -8,11 +51,10 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY
 );
 
-export async function scrapeTodaysScores() {
+async function scrapeTodaysScores() {
   let games = [];
   let total = 0;
   const todayDate = generateFormattedDatesUntilSunday()[0].formatDateAPI;
-  console.log(todayDate);
   const requestUrl = `https://www.bbc.co.uk/wc-data/container/sport-data-scores-fixtures?selectedEndDate=${todayDate}&selectedStartDate=${todayDate}&todayDate=${todayDate}&urn=urn%3Abbc%3Asportsdata%3Afootball%3Atournament%3Apremier-league&useSdApi=false`;
 
   const response = await fetch(requestUrl);
@@ -46,7 +88,6 @@ export async function scrapeTodaysScores() {
         game.homeOutcome = "unknown";
         game.awayOutcome = "unknown";
       }
-
       games.push(game);
     }
   }
@@ -185,3 +226,28 @@ async function TestFunction(score) {
 
 // Trigger the score scraping
 //scrapeTodaysScores();
+
+// Setup type definitions for built-in Supabase Runtime APIs
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+
+Deno.serve(async (req) => {
+  await scrapeTodaysScores();
+
+  const data = {
+    message: `Done`,
+  };
+
+  return new Response(JSON.stringify(data), { headers: { "Content-Type": "application/json" } });
+});
+
+/* To invoke locally:
+
+  1. Run `supabase start` (see: https://supabase.com/docs/reference/cli/supabase-start)
+  2. Make an HTTP request:
+
+  curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/scrape-live-games' \
+    --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' \
+    --header 'Content-Type: application/json' \
+    --data '{"name":"Functions"}'
+
+*/
