@@ -92,8 +92,6 @@ export async function getPickableGames() {
       teamImg: getTeamImage(game.awayTeam), // Add away team image
     },
   ]);
-
-  console.log(gameDetails);
   return gameDetails;
 }
 

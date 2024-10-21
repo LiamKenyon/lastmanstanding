@@ -44,8 +44,20 @@ const getPicks = async (userId, leagueId) => {
     throw new Error("Failed to fetch picks");
   }
   const data = await response.json();
-  console.log(data);
+  return data;
+};
 
+const getUsers = async (leagueId) => {
+  const response = await fetch(`/api/get-league-users/${leagueId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch users");
+  }
+  const data = await response.json();
   return data;
 };
 
@@ -71,6 +83,7 @@ export default function TeamSelectionPage({ params }) {
   const [gameWeeks, setGameWeeks] = useState(null);
   const [winner, setWinner] = useState(null);
   const [user, setUser] = useState(null);
+  const [users, setUsers] = useState();
 
   useEffect(() => {
     const supabase = createClient();
@@ -80,23 +93,20 @@ export default function TeamSelectionPage({ params }) {
         data: { user },
         error,
       } = await supabase.auth.getUser();
-      console.log("THIS IS THE USER", user);
 
       if (user != null) {
         setUser(user);
-        console.log("THERE IS A USER");
       } else {
         // If there's no user, redirect to login
-        console.log("NO USER");
         window.location.href = "/login";
       }
     };
 
     checkAuth();
+
     const fetchPicks = async () => {
       try {
         const data = await getPicks(params.userId, params.leagueId);
-        console.log(data);
 
         setPicks(data.availablePicks);
         setIsEliminated(data.isEliminated);
@@ -117,6 +127,18 @@ export default function TeamSelectionPage({ params }) {
       }
     };
 
+    const fetchUsers = async () => {
+      try {
+        const data = await getUsers(params.leagueId);
+        console.log("data", data);
+        setUsers(data);
+        console.log("users", users);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    fetchUsers();
     fetchPicks();
   }, [params.userId, params.leagueId]);
 
@@ -280,6 +302,38 @@ export default function TeamSelectionPage({ params }) {
           )}
         </div>
         <div className="space-y-6">
+          <Card className="border-t-4 border-t-[#e01883]">
+            <CardHeader>
+              <CardTitle className="text-xl text-[#4a82b0]">League Players</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[300px]">
+                <ul className="space-y-4">
+                  {users.map((user) => (
+                    <li key={user.user_id} className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <Avatar className="h-2 w-2">
+                          <AvatarFallback className="bg-[#4a82b0] text-white">
+                            {user.avatar}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium">{user.display_name}</span>
+                      </div>
+                      {/*
+                      <Badge 
+                        variant={user.status === "active" ? "default" : "secondary"}
+                        className={user.status === "active" ? "bg-green-500" : "bg-red-500"}
+                      >
+                        {user.status === "active" ? "Active" : "Eliminated"}
+                      </Badge>
+                      */}
+                    </li>
+                  ))}
+                </ul>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+
           <Card className="border-t-4 border-t-[#e01883]">
             <CardHeader>
               <CardTitle className="text-xl text-[#4a82b0]">Next Deadline</CardTitle>
