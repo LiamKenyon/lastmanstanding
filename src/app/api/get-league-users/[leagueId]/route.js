@@ -17,9 +17,10 @@ export async function GET(req, { params }) {
     });
   }
 
+  // Fetch the league users (user_id and isEliminated)
   const { data: leagueUsers, error: leagueUsersError } = await supabase
     .from("league_users")
-    .select("user_id")
+    .select("user_id, isEliminated")
     .eq("league_id", parseInt(leagueId));
 
   if (leagueUsersError) {
@@ -31,11 +32,11 @@ export async function GET(req, { params }) {
 
   const userIds = leagueUsers.map((leagueUser) => leagueUser.user_id);
 
-  console.log(userIds);
+  // Fetch the user names based on the user IDs
   const { data: userNames, error: userNamesError } = await supabase
-    .from("profiles") // Assuming the table is called 'authenticated'
-    .select("user_id, display_name") // Selecting the user_id and display_name fields
-    .in("user_id", userIds); // Filtering by the list of user_ids
+    .from("profiles")
+    .select("user_id, display_name")
+    .in("user_id", userIds);
 
   if (userNamesError) {
     console.log(userNamesError);
@@ -44,6 +45,17 @@ export async function GET(req, { params }) {
       { status: 500 }
     );
   }
-  console.log(userNames);
-  return new Response(JSON.stringify(userNames), { status: 200 });
+
+  // Merge isEliminated field with the corresponding user details
+  const result = leagueUsers.map((leagueUser) => {
+    const userProfile = userNames.find((user) => user.user_id === leagueUser.user_id);
+    return {
+      user_id: leagueUser.user_id,
+      display_name: userProfile?.display_name || null, // Handle case where profile not found
+      isEliminated: leagueUser.isEliminated,
+    };
+  });
+
+  // Return the merged result
+  return new Response(JSON.stringify(result), { status: 200 });
 }

@@ -4,6 +4,7 @@ import { createClient } from "../../../../../utils/supabase/client";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -312,21 +313,21 @@ export default function TeamSelectionPage({ params }) {
                   {users.map((user) => (
                     <li key={user.user_id} className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <Avatar className="h-2 w-2">
+                        <Avatar className="h-8 w-8">
                           <AvatarFallback className="bg-[#4a82b0] text-white">
                             {user.avatar}
                           </AvatarFallback>
                         </Avatar>
                         <span className="font-medium">{user.display_name}</span>
                       </div>
-                      {/*
-                      <Badge 
-                        variant={user.status === "active" ? "default" : "secondary"}
-                        className={user.status === "active" ? "bg-green-500" : "bg-red-500"}
-                      >
-                        {user.status === "active" ? "Active" : "Eliminated"}
-                      </Badge>
-                      */}
+                      {
+                        <Badge
+                          variant={user.isEliminated === false ? "default" : "secondary"}
+                          className={user.isEliminated === false ? "bg-green-500" : "bg-red-500"}
+                        >
+                          {user.isEliminated === false ? "Active" : "Eliminated"}
+                        </Badge>
+                      }
                     </li>
                   ))}
                 </ul>
