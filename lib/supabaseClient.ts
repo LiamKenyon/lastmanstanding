@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient as OriginalSupabaseClient } from "../utils/supabase/server.js";
 import { getUniqueLeagueId } from "../lib/utils.js";
+import { DateHandler } from "./dateHandler.ts";
 
 export class SupabaseClient {
   private client: OriginalSupabaseClient;
@@ -8,7 +9,10 @@ export class SupabaseClient {
     this.client = createClient();
   }
 
-  // Check user is authenticated
+  /**
+   *
+   * @returns {Promise<any>} - The authenticated user
+   */
   async getAuthenticatedUser(): Promise<any> {
     const { data, error: authError } = await this.client.auth.getUser();
 
@@ -16,7 +20,11 @@ export class SupabaseClient {
     return data?.user ?? null;
   }
 
-  // Fetch all user leagues
+  /**
+   *
+   * @param userId
+   * @returns {Promise<any>} - All leagues the user is in
+   */
   async getUserLeagues(userId: string): Promise<any> {
     const { data: leagues, error } = await this.client
       .from("league_users")
@@ -30,7 +38,12 @@ export class SupabaseClient {
     return leagues;
   }
 
-  // Create a league
+  /**
+   *
+   * @param name
+   * @param userId
+   * @returns {Promise<any>} - The created league
+   */
   async createLeague(name: string, userId: string): Promise<any> {
     const code = await getUniqueLeagueId();
 
@@ -59,7 +72,11 @@ export class SupabaseClient {
     return createdLeague[0];
   }
 
-  // Get league users
+  /**
+   *
+   * @param leagueId
+   * @returns {Promise<any>} - All the users in the league
+   */
   async getLeagueUsers(leagueId: string): Promise<any> {
     const { data: leagueUsers, error: leagueUsersError } = await this.client
       .from("league_users")
@@ -73,7 +90,11 @@ export class SupabaseClient {
     return leagueUsers;
   }
 
-  // Get user display names based on ids
+  /**
+   *
+   * @param userIds
+   * @returns {Promise<any>} - The display names of the users passed in
+   */
   async getUserDisplayNames(userIds: string[]): Promise<any> {
     const { data: users, error: usersError } = await this.client
       .from("profiles")
@@ -85,5 +106,74 @@ export class SupabaseClient {
     }
 
     return users;
+  }
+
+  /**
+   *
+   * @returns {Promise<any>} - All the teams pickable for the current week
+   */
+  async getPickableGames(): Promise<any> {
+    const dates = DateHandler.generateDatesUntilSunday();
+
+    const { data: games, error: picksError } = await this.client
+      .from("games")
+      .select("homeTeam, awayTeam, date, eventProgress")
+      .gt("date", dates[0])
+      .lte("date", dates[dates.length - 1])
+      .order("date", { ascending: true });
+
+    if (picksError) {
+      throw new Error(`Error fetching pickable games: ${error.message}`);
+    }
+
+    const gameDetails = games.flatMap((game) => [
+      {
+        team: game.homeTeam,
+        date: game.date,
+        opponent: game.awayTeam,
+      },
+      {
+        team: game.awayTeam,
+        date: game.date,
+        opponent: game.homeTeam,
+      },
+    ]);
+
+    return gameDetails;
+  }
+
+  /**
+   *
+   * @param userId
+   * @param leagueId
+   * @returns {Promise<any>} - Picks the user has already made in the league
+   */
+  async getUserPicks(userId: string, leagueId: number): Promise<any> {
+    const { data: picks, error: picksError } = await this.client
+      .from("picks")
+      .select("teamName")
+      .eq("user_id", userId)
+      .eq("league_id", leagueId);
+
+    if (picksError) {
+      throw new Error(`Error fetching picks: ${picksError.message}`);
+    }
+
+    return picks;
+  }
+
+  async getLeagueUserData(userId: string, leagueId: number): Promise<any> {
+    const { data: leagueUserData, error: leagueUserDataError } = await this.client
+      .from("league_users")
+      .select("isEliminated, winner")
+      .eq("user_id", userId)
+      .eq("league_id", leagueId)
+      .single();
+
+    if (leagueUserDataError) {
+      throw new Error(`Error fetching league user data: ${leagueUserDataError.message}`);
+    }
+
+    return leagueUserData;
   }
 }
