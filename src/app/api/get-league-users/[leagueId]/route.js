@@ -6,8 +6,9 @@ export async function GET(req, { params }) {
   const supabaseClient = new SupabaseClient();
 
   const userData = await supabaseClient.getAuthenticatedUser();
-  if (!userData) return new Response(JSON.stringify({ message: "Unauthorized" }), { status: 401 });
-
+  if (!userData) {
+    return new Response(JSON.stringify({ message: "Unauthorized" }), { status: 401 });
+  }
   // Fetch the league users and extract the user IDs
   const leagueUsers = await supabaseClient.getLeagueUsers(leagueId);
   const userIds = leagueUsers.map((leagueUser) => leagueUser.user_id);

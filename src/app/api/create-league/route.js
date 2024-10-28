@@ -4,7 +4,9 @@ export async function POST(req) {
   const supabaseClient = new SupabaseClient();
 
   const userData = await supabaseClient.getAuthenticatedUser();
-  if (!userData) return new Response(JSON.stringify({ message: "Unauthorized" }), { status: 401 });
+  if (!userData) {
+    return new Response(JSON.stringify({ message: "Unauthorized" }), { status: 401 });
+  }
 
   const formData = await req.json();
 
