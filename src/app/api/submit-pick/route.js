@@ -2,7 +2,6 @@ import { createClient } from "../../../../utils/supabase/server.js";
 
 export async function POST(req) {
   const supabase = createClient();
-  const supabaseClient = new SupabaseClient();
   const formData = await req.json();
   console.log("formdata: ", formData);
 
