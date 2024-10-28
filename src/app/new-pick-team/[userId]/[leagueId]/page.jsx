@@ -309,28 +309,29 @@ export default function TeamSelectionPage({ params }) {
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[300px]">
-                <ul className="space-y-4">
-                  {users.map((user) => (
-                    <li key={user.user_id} className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback className="bg-[#4a82b0] text-white">
-                            {user.avatar}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">{user.display_name}</span>
-                      </div>
-                      {
+                {users?.length > 0 && (
+                  <ul className="space-y-4">
+                    {users.map((user) => (
+                      <li key={user.user_id} className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback className="bg-[#4a82b0] text-white">
+                              {user.avatar}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="font-medium">{user.display_name}</span>
+                        </div>
                         <Badge
                           variant={user.isEliminated === false ? "default" : "secondary"}
                           className={user.isEliminated === false ? "bg-green-500" : "bg-red-500"}
                         >
                           {user.isEliminated === false ? "Active" : "Eliminated"}
                         </Badge>
-                      }
-                    </li>
-                  ))}
-                </ul>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
               </ScrollArea>
             </CardContent>
           </Card>
