@@ -1,8 +1,7 @@
-import { createClient } from "../../../../../../utils/supabase/server.js";
 import { SupabaseClient } from "../../../../../../lib/supabaseClient.ts";
+import { getTeamImage } from "../../../../../../lib/TeamImageMapping.ts";
 
 export async function GET(req, { params }) {
-  const supabase = createClient();
   const supabaseClient = new SupabaseClient();
 
   const { userId, leagueId } = params;
@@ -25,13 +24,19 @@ export async function GET(req, { params }) {
     (pick) => !userPicks.some((userPick) => userPick.teamName === pick.team)
   );
 
+  // Add team images to filtered available picks
+  const availablePicksWithImages = filteredAvailablePicks.map((pick) => ({
+    ...pick,
+    teamImg: getTeamImage(pick.team),
+  }));
+
   // Return response with relevant data
   return new Response(
     JSON.stringify({
       userId,
       leagueId,
       isEliminated: leagueUser.isEliminated,
-      availablePicks: filteredAvailablePicks,
+      availablePicks: availablePicksWithImages,
       gameWeeks: userPicks.length,
       winner: leagueUser.winner,
     }),
