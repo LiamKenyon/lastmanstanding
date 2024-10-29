@@ -203,4 +203,39 @@ export class SupabaseClient {
 
     return leagueUserData;
   }
+
+  /**
+   * Checks if a league with given code exists
+   * @param code
+   * @returns A league with given code if exists
+   */
+  async getLeagueByCode(code: string): Promise<any> {
+    const { data: league, error: leagueError } = await this.client
+      .from("leagues")
+      .select("id")
+      .eq("code", formData.leagueCode)
+      .single();
+
+    if (leagueError) {
+      throw new Error(`Error fetching league: ${leagueError.message}`);
+    }
+
+    return league;
+  }
+
+  /**
+   * Adds a user to a league
+   * @param userId
+   * @param leagueId
+   */
+  async addUserToLeague(userId: string, leagueId: number): Promise<void> {
+    const { error: joinLeagueError } = await this.client.from("league_users").insert({
+      user_id: userId,
+      league_id: leagueId,
+    });
+
+    if (joinLeagueError) {
+      throw new Error(`Error joining league: ${joinLeagueError.message}`);
+    }
+  }
 }
