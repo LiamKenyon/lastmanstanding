@@ -1,7 +1,7 @@
 export class DateHandler {
   /**
-   *
-   * @returns {string[]} - An array of dates from today until the next Sunday
+   * Generates an array of dates from today until the next Sunday?
+   * @returns {string[]} - An array of dates
    */
   static generateDatesUntilSunday(): string[] {
     const formattedDates: string[] = [];
@@ -19,8 +19,8 @@ export class DateHandler {
   }
 
   /**
-   *
-   * @returns {string[]} - An array of dates from today until the previous Sunday
+   * Generates an array of dates from today until the previous Sunday
+   * @returns {string[]} - An array of dates
    */
   static generateDatesUntilPreviousSunday(): string[] {
     const formattedDates: string[] = [];
