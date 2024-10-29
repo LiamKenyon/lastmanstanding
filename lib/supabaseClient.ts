@@ -10,7 +10,7 @@ export class SupabaseClient {
   }
 
   /**
-   *
+   * Gets the authenticated user or null if not authenticated
    * @returns {Promise<any>} - The authenticated user
    */
   async getAuthenticatedUser(): Promise<any> {
@@ -21,9 +21,9 @@ export class SupabaseClient {
   }
 
   /**
-   *
+   * Gets all the leagues the user is in
    * @param userId
-   * @returns {Promise<any>} - All leagues the user is in
+   * @returns {Promise<any>} - User's leagues
    */
   async getUserLeagues(userId: string): Promise<any> {
     const { data: leagues, error } = await this.client
@@ -39,7 +39,7 @@ export class SupabaseClient {
   }
 
   /**
-   *
+   * Creates a league and associates the user with it
    * @param name
    * @param userId
    * @returns {Promise<any>} - The created league
@@ -73,9 +73,9 @@ export class SupabaseClient {
   }
 
   /**
-   *
+   * Gets all the users of a league (user_id and isEliminated)
    * @param leagueId
-   * @returns {Promise<any>} - All the users in the league
+   * @returns {Promise<any>} - Users of a league
    */
   async getLeagueUsers(leagueId: string): Promise<any> {
     const { data: leagueUsers, error: leagueUsersError } = await this.client
@@ -91,9 +91,9 @@ export class SupabaseClient {
   }
 
   /**
-   *
+   * Gets the display names of the users passed in
    * @param userIds
-   * @returns {Promise<any>} - The display names of the users passed in
+   * @returns {Promise<any>} - Users display names
    */
   async getUserDisplayNames(userIds: string[]): Promise<any> {
     const { data: users, error: usersError } = await this.client
@@ -109,8 +109,8 @@ export class SupabaseClient {
   }
 
   /**
-   *
-   * @returns {Promise<any>} - All the teams pickable for the current week
+   * Gets all the games that are pickable regardless of the user's picks
+   * @returns {Promise<any>} - All pickable games / teams
    */
   async getPickableGames(): Promise<any> {
     const dates = DateHandler.generateDatesUntilSunday();
@@ -143,8 +143,8 @@ export class SupabaseClient {
   }
 
   /**
-   *
-   * @returns {Promise<any>} - Games that have already been played within certain dates
+   * Gets the previous games between certain dates
+   * @returns {Promise<any>} - Previous games
    */
   async getPreviousGames(): Promise<any> {
     const dates = DateHandler.generateDatesUntilPreviousSunday();
@@ -164,10 +164,10 @@ export class SupabaseClient {
   }
 
   /**
-   *
+   * Gets the picks a user has already made in a league
    * @param userId
    * @param leagueId
-   * @returns {Promise<any>} - Picks the user has already made in the league
+   * @returns {Promise<any>} - Users picks
    */
   async getUserPicks(userId: string, leagueId: number): Promise<any> {
     const { data: picks, error: picksError } = await this.client
@@ -184,7 +184,7 @@ export class SupabaseClient {
   }
 
   /**
-   *
+   * Gets isEliminated and winner status of a user in a league
    * @param userId
    * @param leagueId
    * @returns {Promise<any>} - Information about the user in the league
