@@ -144,6 +144,27 @@ export class SupabaseClient {
 
   /**
    *
+   * @returns {Promise<any>} - Games that have already been played within certain dates
+   */
+  async getPreviousGames(): Promise<any> {
+    const dates = DateHandler.generateDatesUntilPreviousSunday();
+
+    const { data: games, error: picksError } = await this.client
+      .from("games")
+      .select("homeTeam, awayTeam, homeScore, awayScore, date, id, eventProgress")
+      .gte("date", dates[dates.length - 1])
+      .lte("date", dates[0])
+      .order("date", { ascending: true });
+
+    if (picksError) {
+      throw new Error(`Error fetching previous games: ${error.message}`);
+    }
+
+    return games;
+  }
+
+  /**
+   *
    * @param userId
    * @param leagueId
    * @returns {Promise<any>} - Picks the user has already made in the league
