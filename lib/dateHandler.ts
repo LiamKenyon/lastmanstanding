@@ -26,7 +26,7 @@ export class DateHandler {
     const formattedDates: string[] = [];
     const dateObj = new Date();
     const currentDay = dateObj.getDay();
-    const daysSinceSunday = currentDay === 0 ? 7 : currentDay;
+    const daysSinceSunday = currentDay === 0 ? 8 : currentDay + 2;
 
     for (let i = 0; i < daysSinceSunday; i++) {
       const newDate = new Date(dateObj);
