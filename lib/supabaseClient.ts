@@ -183,7 +183,7 @@ export class SupabaseClient {
     return picks;
   }
 
-/**
+  /**
    *
    * @param userId
    * @param leagueId
