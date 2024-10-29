@@ -162,6 +162,12 @@ export class SupabaseClient {
     return picks;
   }
 
+/**
+   *
+   * @param userId
+   * @param leagueId
+   * @returns {Promise<any>} - Information about the user in the league
+   */
   async getLeagueUserData(userId: string, leagueId: number): Promise<any> {
     const { data: leagueUserData, error: leagueUserDataError } = await this.client
       .from("league_users")
