@@ -4,12 +4,15 @@ import {
 } from "../utils/supabase/server.js";
 import { getUniqueLeagueId } from "../lib/utils.js";
 import { DateHandler } from "./dateHandler.ts";
+import { LeagueIdGenerator } from "./leagueIdGenerator.ts";
 
 export class SupabaseClient {
   private client: OriginalSupabaseClient;
+  private leagueIdGenerator: LeagueIdGenerator;
 
   constructor() {
     this.client = createClient();
+    this.leagueIdGenerator = new LeagueIdGenerator(this);
   }
 
   /**
@@ -48,8 +51,7 @@ export class SupabaseClient {
    * @returns {Promise<any>} - The created league
    */
   async createLeague(name: string, userId: string): Promise<any> {
-    const code = await getUniqueLeagueId();
-
+    const code = await this.leagueIdGenerator.getUniqueLeagueId();
     const { data: createdLeague, error: leagueError } = await this.client
       .from("leagues")
       .insert({
@@ -63,17 +65,13 @@ export class SupabaseClient {
       throw new Error(`Error creating league: ${leagueError.message}`);
     }
 
-    const { error: userLeagueError } = await this.client
-      .from("league_users")
-      .insert({
-        user_id: userId,
-        league_id: createdLeague[0].id,
-      });
+    const { error: userLeagueError } = await this.client.from("league_users").insert({
+      user_id: userId,
+      league_id: createdLeague[0].id,
+    });
 
     if (userLeagueError) {
-      throw new Error(
-        `Error associating user with league: ${userLeagueError.message}`
-      );
+      throw new Error(`Error associating user with league: ${userLeagueError.message}`);
     }
 
     return createdLeague[0];
@@ -91,9 +89,7 @@ export class SupabaseClient {
       .eq("league_id", parseInt(leagueId));
 
     if (leagueUsersError) {
-      throw new Error(
-        `Error fetching league users: ${leagueUsersError.message}`
-      );
+      throw new Error(`Error fetching league users: ${leagueUsersError.message}`);
     }
 
     return leagueUsers;
@@ -111,9 +107,7 @@ export class SupabaseClient {
       .in("user_id", userIds);
 
     if (usersError) {
-      throw new Error(
-        `Error fetching user display names: ${usersError.message}`
-      );
+      throw new Error(`Error fetching user display names: ${usersError.message}`);
     }
 
     return users;
@@ -162,9 +156,7 @@ export class SupabaseClient {
 
     const { data: games, error: picksError } = await this.client
       .from("games")
-      .select(
-        "homeTeam, awayTeam, homeScore, awayScore, date, id, eventProgress"
-      )
+      .select("homeTeam, awayTeam, homeScore, awayScore, date, id, eventProgress")
       .gte("date", dates[dates.length - 1])
       .lte("date", dates[0])
       .order("date", { ascending: true });
@@ -203,18 +195,15 @@ export class SupabaseClient {
    * @returns {Promise<any>} - Information about the user in the league
    */
   async getLeagueUserData(userId: string, leagueId: number): Promise<any> {
-    const { data: leagueUserData, error: leagueUserDataError } =
-      await this.client
-        .from("league_users")
-        .select("isEliminated, winner")
-        .eq("user_id", userId)
-        .eq("league_id", leagueId)
-        .single();
+    const { data: leagueUserData, error: leagueUserDataError } = await this.client
+      .from("league_users")
+      .select("isEliminated, winner")
+      .eq("user_id", userId)
+      .eq("league_id", leagueId)
+      .single();
 
     if (leagueUserDataError) {
-      throw new Error(
-        `Error fetching league user data: ${leagueUserDataError.message}`
-      );
+      throw new Error(`Error fetching league user data: ${leagueUserDataError.message}`);
     }
 
     return leagueUserData;
@@ -243,12 +232,10 @@ export class SupabaseClient {
    * @param leagueId
    */
   async addUserToLeague(userId: string, leagueId: number): Promise<void> {
-    const { data: added, error: joinLeagueError } = await this.client
-      .from("league_users")
-      .insert({
-        user_id: userId,
-        league_id: leagueId,
-      });
+    const { data: added, error: joinLeagueError } = await this.client.from("league_users").insert({
+      user_id: userId,
+      league_id: leagueId,
+    });
 
     if (joinLeagueError) {
       throw new Error(`Error joining league: ${joinLeagueError.message}`);
