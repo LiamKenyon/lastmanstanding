@@ -1,45 +1,25 @@
 import { createClient } from "../../../../utils/supabase/server.js";
+import { SupabaseClient } from "../../../../lib/supabaseClient.ts";
 
 export async function POST(req) {
-  const supabase = createClient();
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-  const formData = await req.json();
+  const supabaseClient = new SupabaseClient();
 
-  if (userError) {
-    console.error("Error getting user:", userError.message);
+  const userData = await supabaseClient.getAuthenticatedUser();
+  if (!userData) {
     return new Response(JSON.stringify({ message: "Unauthorized" }), {
       status: 401,
     });
   }
 
   try {
-    // Find the league with the given code
-    const { data: league, error: leagueError } = await supabase
-      .from("leagues")
-      .select("id")
-      .eq("code", formData.leagueCode)
-      .single(); // Use single() to fetch one league
+    const formData = await req.json();
+    const league = await supabaseClient.getLeagueByCode(formData.leagueCode);
 
-    if (leagueError) {
-      throw new Error(leagueError.message);
+    if (league.length > 0) {
+      await supabaseClient.addUserToLeague(userData.id, league[0].id);
     }
 
-    if (league) {
-      // Add the user to the league
-      const { error: joinError } = await supabase.from("league_users").insert({
-        user_id: user.id,
-        league_id: league.id,
-      });
-
-      if (joinError) {
-        throw new Error(joinError.message);
-      }
-    }
-
-    return new Response(JSON.stringify({ message: "League found" }), {
+    return new Response(JSON.stringify({ message: "League joined" }), {
       status: 200,
     });
   } catch (error) {
