@@ -6,7 +6,9 @@ export async function GET(req, { params }) {
 
   const userData = await supabaseClient.getAuthenticatedUser();
   if (!userData) {
-    return new Response(JSON.stringify({ message: "Unauthorized" }), { status: 401 });
+    return new Response(JSON.stringify({ message: "Unauthorized" }), {
+      status: 401,
+    });
   }
 
   const previousScores = await supabaseClient.getPreviousGames();
@@ -15,5 +17,7 @@ export async function GET(req, { params }) {
     homeImg: getTeamImage(score.homeTeam),
     awayImg: getTeamImage(score.awayTeam),
   }));
-  return new Response(JSON.stringify(previousScoresWithImages), { status: 200 });
+  return new Response(JSON.stringify(previousScoresWithImages), {
+    status: 200,
+  });
 }
