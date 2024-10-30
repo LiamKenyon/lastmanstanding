@@ -213,9 +213,7 @@ export class SupabaseClient {
     const { data: league, error: leagueError } = await this.client
       .from("leagues")
       .select("id")
-      .eq("code", formData.leagueCode)
-      .single();
-
+      .eq("code", code);
     if (leagueError) {
       throw new Error(`Error fetching league: ${leagueError.message}`);
     }
