@@ -7,7 +7,7 @@ const supabase = createClient(
 
 async function markLastUserAsWinner() {
   // Query all active leagues
-  const { data: leagues, error: leaguesError } = await supabase.from("leagues").select("*"); // Selects all columns
+  const { data: leagues, error: leaguesError } = await supabase.from("leagues").select("*");
 
   if (leaguesError) {
     console.error("Error fetching leagues:", leaguesError.message);

@@ -27,6 +27,11 @@ export async function GET(req, { params }) {
     };
   });
 
+  for (let resultItem of result) {
+    let userPicks = await supabaseClient.getUserPicks(resultItem.user_id, leagueId);
+    resultItem.picks = userPicks;
+  }
+
   // Return the merged result
   return new Response(JSON.stringify(result), { status: 200 });
 }
