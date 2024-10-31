@@ -59,20 +59,9 @@ const getUsers = async (leagueId) => {
     throw new Error("Failed to fetch users");
   }
   const data = await response.json();
+
   return data;
 };
-
-// Mock data for teams and their oppositions
-const teams = [
-  { name: "Arsenal", opposition: "Chelsea", recentResults: ["W", "D", "W", "L", "W"] },
-  { name: "Manchester United", opposition: "Liverpool", recentResults: ["L", "W", "W", "D", "L"] },
-  { name: "Manchester City", opposition: "Tottenham", recentResults: ["W", "W", "W", "W", "D"] },
-  { name: "Newcastle", opposition: "Everton", recentResults: ["D", "L", "W", "W", "D"] },
-  { name: "West Ham", opposition: "Crystal Palace", recentResults: ["L", "L", "D", "W", "W"] },
-  { name: "Aston Villa", opposition: "Wolves", recentResults: ["W", "D", "L", "W", "L"] },
-  { name: "Brighton", opposition: "Brentford", recentResults: ["W", "W", "D", "L", "W"] },
-  { name: "Fulham", opposition: "Bournemouth", recentResults: ["L", "D", "W", "L", "D"] },
-];
 
 export default function TeamSelectionPage({ params }) {
   const [picks, setPicks] = useState([]);
@@ -331,7 +320,6 @@ export default function TeamSelectionPage({ params }) {
                     ))}
                   </ul>
                 )}
-
               </ScrollArea>
             </CardContent>
           </Card>
