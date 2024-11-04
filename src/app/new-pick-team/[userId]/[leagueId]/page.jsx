@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Trophy, ArrowRight, Star } from "lucide-react";
+import { Trophy, ArrowRight, Star, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
 import Link from "next/link";
 import confetti from "canvas-confetti";
 
@@ -74,6 +76,7 @@ export default function TeamSelectionPage({ params }) {
   const [winner, setWinner] = useState(null);
   const [user, setUser] = useState(null);
   const [users, setUsers] = useState();
+  const [expandedUser, setExpandedUser] = useState(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -102,6 +105,7 @@ export default function TeamSelectionPage({ params }) {
         setIsEliminated(data.isEliminated);
         setGameWeeks(data.gameWeeks);
         setLoading(false);
+        console.log(loading);
         setWinner(data.winner);
 
         if (data.winner) {
@@ -167,6 +171,10 @@ export default function TeamSelectionPage({ params }) {
       default:
         return "bg-gray-500";
     }
+  };
+
+  const toggleUserExpansion = (userId) => {
+    setExpandedUser(expandedUser === userId ? null : userId);
   };
 
   if (loading) {
@@ -301,21 +309,75 @@ export default function TeamSelectionPage({ params }) {
                 {users?.length > 0 && (
                   <ul className="space-y-4">
                     {users.map((user) => (
-                      <li key={user.user_id} className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback className="bg-[#4a82b0] text-white">
-                              {user.avatar}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="font-medium">{user.display_name}</span>
-                        </div>
-                        <Badge
-                          variant={user.isEliminated === false ? "default" : "secondary"}
-                          className={user.isEliminated === false ? "bg-green-500" : "bg-red-500"}
-                        >
-                          {user.isEliminated === false ? "Active" : "Eliminated"}
-                        </Badge>
+                      <li key={user.user_id}>
+                        <Collapsible>
+                          <CollapsibleTrigger asChild>
+                            <div
+                              className="flex items-center justify-between cursor-pointer"
+                              onClick={() => toggleUserExpansion(user.user_id)}
+                            >
+                              <div className="flex items-center space-x-3">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarFallback className="bg-[#4a82b0] text-white">
+                                    {user.avatar}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="font-medium">{user.display_name}</span>
+                              </div>
+                              <div className="flex items-center space-x-2 mr-2">
+                                <Badge
+                                  variant={user.isEliminated == false ? "default" : "secondary"}
+                                  className={
+                                    user.isEliminated == false ? "bg-green-500" : "bg-red-500"
+                                  }
+                                >
+                                  {user.isEliminated == false ? "Active" : "Eliminated"}
+                                </Badge>
+                                {expandedUser === user.id ? (
+                                  <ChevronUp className="h-4 w-4" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4" />
+                                )}
+                              </div>
+                            </div>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            <div className="mt-2 pl-11">
+                              <h4 className="text-sm font-semibold mb-2">Pick History:</h4>
+                              <ul className="space-y-1">
+                                {user.picks.map((pick) => (
+                                  <li
+                                    key={pick.teamName}
+                                    className={`text-xs p-1 rounded-md flex items-center justify-start bg-blue-100`}
+                                  >
+                                    {/* <span className="font-medium w-6">{pick.gameweek}</span> */}
+                                    <span className="font-bold w-48 truncate">{pick.teamName}</span>
+                                    <span className="w-32 truncate">
+                                      {new Date(pick.date).toLocaleDateString("en-US", {
+                                        year: "numeric",
+                                        month: "long",
+                                        day: "numeric",
+                                      })}
+                                    </span>
+                                    {/* <span className="w-24 truncate">{pick.opponent}</span> */}
+                                    {/* <Badge 
+                                     variant={pick.result === "W" ? "default" : pick.result === "L" ? "destructive" : "secondary"}
+                                     className={`text-xs px-1 py-0 ${
+                                       pick.result === "W" 
+                                         ? "bg-green-500" 
+                                         : pick.result === "L" 
+                                         ? "bg-red-500" 
+                                         : "bg-yellow-500"
+                                     }`}
+                                   >
+                                     {pick.result}
+                                   </Badge> */}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </CollapsibleContent>
+                        </Collapsible>
                       </li>
                     ))}
                   </ul>
