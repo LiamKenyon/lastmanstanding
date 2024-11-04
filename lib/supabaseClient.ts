@@ -27,7 +27,7 @@ export class SupabaseClient {
   }
 
   /**
-   * Gets all the leagues the user is in
+   * Gets all the leagues a user is in
    * @param userId
    * @returns {Promise<any>} - User's leagues
    */
@@ -114,7 +114,7 @@ export class SupabaseClient {
   }
 
   /**
-   * Gets all the games that are pickable regardless of the user's picks
+   * Gets all the games that are pickable
    * @returns {Promise<any>} - All pickable games / teams
    */
   async getPickableGames(): Promise<any> {
