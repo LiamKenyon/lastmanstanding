@@ -177,7 +177,7 @@ export class SupabaseClient {
   async getUserPicks(userId: string, leagueId: number): Promise<any> {
     const { data: picks, error: picksError } = await this.client
       .from("picks")
-      .select("teamName")
+      .select("teamName, date")
       .eq("user_id", userId)
       .eq("league_id", leagueId);
 
