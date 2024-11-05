@@ -1,22 +1,23 @@
-import { createClient } from "../../../../utils/supabase/server.js";
-import { getPreviousScores } from "../../../../scripts/getPreviousScores.js";
+import { SupabaseClient } from "../../../../lib/supabaseClient.ts";
+import { getTeamImage } from "../../../../lib/TeamImageMapping.ts";
 
 export async function GET(req, { params }) {
-  const supabase = createClient();
+  const supabaseClient = new SupabaseClient();
 
-  // Fetch previous scores
-  const previousScores = await getPreviousScores();
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  // If there is an error or the user is not authenticated
-  if (userError || !user) {
+  const userData = await supabaseClient.getAuthenticatedUser();
+  if (!userData) {
     return new Response(JSON.stringify({ message: "Unauthorized" }), {
       status: 401,
     });
   }
-  return new Response(JSON.stringify(previousScores), { status: 200 });
+
+  const previousScores = await supabaseClient.getPreviousGames();
+  const previousScoresWithImages = previousScores.map((score) => ({
+    ...score,
+    homeImg: getTeamImage(score.homeTeam),
+    awayImg: getTeamImage(score.awayTeam),
+  }));
+  return new Response(JSON.stringify(previousScoresWithImages), {
+    status: 200,
+  });
 }

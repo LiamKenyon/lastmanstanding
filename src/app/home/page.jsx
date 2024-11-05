@@ -83,16 +83,13 @@ export default function HomePage() {
         data: { user },
         error,
       } = await supabase.auth.getUser();
-      console.log("THIS IS THE USER", user);
 
       if (user != null) {
         setUser(user);
         fetchLeagues(user.id);
-        console.log("THERE IS A USER");
         fetchPreviousScores();
       } else {
         // If there's no user, redirect to login
-        console.log("NO USER");
         window.location.href = "/login";
       }
     };
@@ -273,14 +270,16 @@ export default function HomePage() {
                 <ScrollArea className="h-[300px]">
                   <ul className="space-y-4">
                     {leagues.map((league) => (
-                      <li key={league.id}>
+                      <li key={league.leagues.id}>
                         <Card>
                           <Link
-                            href={`/new-pick-team/${user.id}/${league.id}`}
+                            href={`/new-pick-team/${user.id}/${league.leagues.id}`}
                             className="cursor-pointer"
                           >
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                              <CardTitle className="text-sm font-medium">{league.name}</CardTitle>
+                              <CardTitle className="text-sm font-medium">
+                                {league.leagues.name}
+                              </CardTitle>
                               <div className="flex flex-col gap-2">
                                 {league.winner && (
                                   <Badge className="bg-[#4CAF50] flex items-center justify-center">
@@ -292,7 +291,7 @@ export default function HomePage() {
                                     {"Eliminated"}
                                   </Badge>
                                 )}
-                                {league.isactive && (
+                                {league.leagues.isactive && (
                                   <Badge className="bg-[#4a82b0] flex items-center justify-center">
                                     {"Active"}
                                   </Badge>
@@ -310,7 +309,7 @@ export default function HomePage() {
                                   {league.members} members
                                 </div>
                                 <div className="text-sm text-muted-foreground">
-                                  code: {league.code}
+                                  code: {league.leagues.code}
                                 </div>
                               </div>
                             </CardContent>
